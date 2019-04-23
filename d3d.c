@@ -151,7 +151,7 @@ static void cast_ray(
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
 	for (size_t t = 0; t < cam->height; ++t) {
-		double dist_y = cam->tans[t] * dist;
+		double dist_y = cam->tans[t] * dist + 0.5;
 		if (dist_y >= 1.0) {
 			*GET(cam, pixels, x, t) = ' ';
 		} else if (dist_y <= 0.0) {
