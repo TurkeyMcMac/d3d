@@ -14,10 +14,10 @@ static const d3d_texture empty_texture = {
 };
 
 static const d3d_block empty_block = {{
-	&empty_texture,
-	&empty_texture,
-	&empty_texture,
-	&empty_texture,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	&empty_texture,
 	&empty_texture
 }};
@@ -88,25 +88,25 @@ static const d3d_block *nextpos(
 {
 	const d3d_block * const *blk = NULL;
 	d3d_vec_s tonext = {INFINITY, INFINITY};
-	*dir = 0;
+	d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
 	if (dpos->x < 0.0) {
 		tonext.x = -fmod(pos->x, 1.0);
 	} else if (dpos->x > 0.0) {
+		ew = D3D_DEAST;
 		tonext.x = 1.0 - fmod(pos->x, 1.0);
-		*dir |= 2;
 	}
 	if (dpos->y < 0.0) {
+		ns = D3D_DSOUTH;
 		tonext.y = -fmod(pos->y, 1.0);
 	} else if (dpos->y > 0.0) {
-		*dir |= 1;
 		tonext.y = 1.0 - fmod(pos->y, 1.0);
 	}
 	if (tonext.x / dpos->x < tonext.y / dpos->y) {
-		*dir &= 2;
+		*dir = ew;
 		pos->x += tonext.x;
 		pos->y += tonext.x / dpos->x * dpos->y - copysign(0.001, dpos->y);
 	} else {
-		*dir &= 1;
+		*dir = ns;
 		pos->y += tonext.y;
 		pos->x += tonext.y / dpos->y * dpos->x - copysign(0.001, dpos->x);
 	}
@@ -115,6 +115,7 @@ static const d3d_block *nextpos(
 		*dir = -1;
 		return NULL;
 	}
+	if (!(*blk)->faces[*dir]) *dir = -1;
 	return *blk;
 }
 
