@@ -167,16 +167,16 @@ static void cast_ray(
 			size_t tx, ty;
 			switch (face) {
 			case D3D_DNORTH:
-				dimension = 1.0 - fmod(pos.x, 1.0);
-				break;
-			case D3D_DSOUTH:
 				dimension = fmod(pos.x, 1.0);
 				break;
+			case D3D_DSOUTH:
+				dimension = 1.0 - fmod(pos.x, 1.0);
+				break;
 			case D3D_DWEST:
-				dimension = 1.0 - fmod(pos.y, 1.0);
+				dimension = fmod(pos.y, 1.0);
 				break;
 			case D3D_DEAST:
-				dimension = fmod(pos.y, 1.0);
+				dimension = 1.0 - fmod(pos.y, 1.0);
 				break;
 			default:
 				continue;
