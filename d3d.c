@@ -45,7 +45,6 @@ d3d_camera *d3d_new_camera(
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
-		printf("t %f\n", tan(angle));
 		cam->tans[y] = tan(angle);
 	}
 	return cam;
@@ -87,7 +86,7 @@ static const d3d_block *nextpos(
 	const d3d_vec_s *dpos,
 	d3d_direction *dir)
 {
-	const d3d_block **blk = NULL;
+	const d3d_block * const *blk = NULL;
 	d3d_vec_s tonext = {INFINITY, INFINITY};
 	*dir = 0;
 	if (dpos->x < 0.0) {
@@ -160,7 +159,6 @@ static void cast_ray(
 		} else {
 			double dimension;
 			size_t tx, ty;
-			printf("(%f, %f)\n", pos.x, pos.y);
 			switch (face) {
 			case D3D_DNORTH:
 				dimension = 1.0 - fmod(pos.x, 1.0);
@@ -190,7 +188,6 @@ void d3d_draw(
 	const d3d_board *board)
 {
 	for (size_t x = 0; x < cam->width; ++x) {
-		printf("x %lu\n",x);
 		cast_ray(cam, board, x);
 	}
 }

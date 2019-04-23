@@ -37,12 +37,11 @@ typedef struct {
 	const d3d_block *blocks[];
 } d3d_board;
 
-typedef enum {
-	D3D_DNORTH = 0,
-	D3D_DSOUTH = 1,
-	D3D_DWEST = 2,
-	D3D_DEAST = 3
-} d3d_direction;
+#define D3D_DNORTH 0
+#define D3D_DSOUTH 1
+#define D3D_DWEST  2
+#define D3D_DEAST  3
+typedef int d3d_direction;
 
 d3d_camera *d3d_new_camera(
 		double fovx,
