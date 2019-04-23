@@ -175,7 +175,7 @@ static void cast_ray(
 			default:
 				continue;
 			}
-			tx = dimension * (txtr->width - 0.5);
+			tx = dimension * (txtr->width - 0.5) + 0.4999;
 			ty = txtr->height * dist_y;
 			*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
 		}
