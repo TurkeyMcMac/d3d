@@ -9,7 +9,7 @@ void init_pairs(void)
 	if (COLOR_PAIRS < 65) return;
 	for (int fg = 0; fg < 7; ++fg) {
 		for (int bg = 0; bg < 7; ++bg) {
-			init_pair((bg << 3 | fg) + 1, bg, fg);
+			init_pair((fg << 3 | bg) + 1, fg, bg);
 		}
 	}
 }
