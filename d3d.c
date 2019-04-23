@@ -147,7 +147,12 @@ static void cast_ray(
 		cam->facing + cam->fov.x * (0.5 - (double)x / cam->width);
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
 	txtr = hit_wall(cam, board, &pos, &dpos, &face);
-	if (!txtr) return;
+	if (!txtr) {
+		for (size_t y = 0; y < cam->height; ++y) {
+			*GET(cam, pixels, x, y) = ' ';
+		}
+		return;
+	}
 	disp.x = pos.x - cam->pos.x;
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
