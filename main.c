@@ -3,26 +3,35 @@
 #include <string.h>
 
 
-#define SIDE 12
+#define SIDE 21
 int main(void)
 {
 	static const char pixels[SIDE * SIDE] =
-		"O----------O"
-		"|..........|"
-		"|.########.|"
-		"|##########|"
-		"|##O####O##|"
-		"|###(##)###|"
-		"|.########.|"
-		"|.##){}(##.|"
-		"|..######..|"
-		"|..........|"
-		"|..........|"
-		"O----------O"
+		"....................."
+		"....................."
+		".#.#.###.#...#...###."
+		".#.#.#...#...#...#.#."
+		".###.###.#...#...#.#."
+		".#.#.#...#...#...#.#."
+		".#.#.###.###.###.###."
+		"....................."
+		".#.#.###.#...#...###."
+		".#.#.#...#...#...#.#."
+		".###.###.#...#...#.#."
+		".#.#.#...#...#...#.#."
+		".#.#.###.###.###.###."
+		"....................."
+		".#.#.###.#...#...###."
+		".#.#.#...#...#...#.#."
+		".###.###.#...#...#.#."
+		".#.#.#...#...#...#.#."
+		".#.#.###.###.###.###."
+		"....................."
+		"....................."
 	;
 	d3d_texture *txtr = d3d_new_texture(SIDE, SIDE);
 	d3d_block blk = {{txtr, txtr, txtr, txtr, txtr, txtr}};
-	d3d_camera *cam = d3d_new_camera(2.0, 2.0, 120, 80);
+	d3d_camera *cam = d3d_new_camera(2.0, 2.0, 160, 80);
 	d3d_board *brd = d3d_new_board(3, 3);
 	memcpy(txtr->pixels, pixels, SIDE * SIDE);
 	brd->blocks[0] = &blk;
@@ -33,12 +42,13 @@ int main(void)
 	brd->blocks[5] = &blk;
 	brd->blocks[6] = &blk;
 	brd->blocks[7] = &blk;
-	cam->pos.x = 1.2;
-	cam->pos.y = 1.9;
-	cam->facing = 4.9;
+	brd->blocks[8] = &blk;
+	cam->pos.x = 1.5;
+	cam->pos.y = 1.5;
+	cam->facing = 3.1;
 	d3d_draw(cam, NULL, brd);
-	for (size_t i = 0; i < 80 * 120; i += 120) {
-		for (size_t j = 0; j < 120; ++j) {
+	for (size_t i = 0; i < 80 * 160; i += 160) {
+		for (size_t j = 0; j < 160; ++j) {
 			char pix = cam->pixels[i + j];
 			putchar(pix ? pix : ' ');
 		}
