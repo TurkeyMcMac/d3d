@@ -166,16 +166,16 @@ static void cast_ray(
 			case D3D_DSOUTH:
 				dimension = fmod(pos.x, 1.0);
 				break;
-			case D3D_DEAST:
+			case D3D_DWEST:
 				dimension = 1.0 - fmod(pos.y, 1.0);
 				break;
-			case D3D_DWEST:
+			case D3D_DEAST:
 				dimension = fmod(pos.y, 1.0);
 				break;
 			default:
 				continue;
 			}
-			tx = dimension * (txtr->width - 1);
+			tx = dimension * (txtr->width - 0.5);
 			ty = txtr->height * dist_y;
 			*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
 		}
