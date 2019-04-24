@@ -119,7 +119,7 @@ static const d3d_block *nextpos(
 	return *blk;
 }
 
-static const d3d_texture *hit_wall(
+static const d3d_block *hit_wall(
 	d3d_camera *cam,
 	const d3d_board *board,
 	d3d_vec_s *pos,
@@ -131,7 +131,7 @@ static const d3d_texture *hit_wall(
 		block = nextpos(cam, board, pos, dpos, dir);
 	} while (*dir == -1 && block);
 	if (!block) return NULL;
-	return block->faces[*dir];
+	return block;
 }
 
 static void cast_ray(
@@ -140,14 +140,14 @@ static void cast_ray(
 	size_t x)
 {
 	d3d_direction face;
-	const d3d_texture *txtr;
+	const d3d_block *block;
 	d3d_vec_s pos = cam->pos, disp;
 	double dist;
 	double angle =
 		cam->facing + cam->fov.x * (0.5 - (double)x / cam->width);
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
-	txtr = hit_wall(cam, board, &pos, &dpos, &face);
-	if (!txtr) {
+	block = hit_wall(cam, board, &pos, &dpos, &face);
+	if (!block) {
 		for (size_t y = 0; y < cam->height; ++y) {
 			*GET(cam, pixels, x, y) = ' ';
 		}
@@ -157,14 +157,12 @@ static void cast_ray(
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
 	for (size_t t = 0; t < cam->height; ++t) {
+		const d3d_texture *txtr;
+		size_t tx, ty;
 		double dist_y = cam->tans[t] * dist + 0.5;
-		if (dist_y >= 1.0) {
-			*GET(cam, pixels, x, t) = ' ';
-		} else if (dist_y <= 0.0) {
-			*GET(cam, pixels, x, t) = ' ';
-		} else {
+		if (dist_y > 0.0 && dist_y < 1.0) {
 			double dimension;
-			size_t tx, ty;
+			txtr = block->faces[face];
 			switch (face) {
 			case D3D_DNORTH:
 				dimension = fmod(pos.x, 1.0);
@@ -183,8 +181,18 @@ static void cast_ray(
 			}
 			tx = dimension * (txtr->width - 0.5) + 0.4999;
 			ty = txtr->height * dist_y;
-			*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
+		} else {
+			double tangent = fabs(cam->tans[t]);
+			double newdist = 0.5 / tangent;
+			d3d_vec_s newdisp = {
+				disp.x / dist * newdist,
+				disp.y / dist * newdist
+			};
+			txtr = block->faces[dist_y >= 1. ? D3D_DUP : D3D_DDOWN];
+			tx = fmod(cam->pos.x + newdisp.x, 1.0) * txtr->width;
+			ty = fmod(cam->pos.y + newdisp.y, 1.0) * txtr->height;
 		}
+		*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
 	}
 }
 

@@ -41,6 +41,8 @@ typedef struct {
 #define D3D_DSOUTH 1
 #define D3D_DWEST  2
 #define D3D_DEAST  3
+#define D3D_DUP    4
+#define D3D_DDOWN  5
 typedef int d3d_direction;
 
 d3d_camera *d3d_new_camera(
