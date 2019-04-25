@@ -21,6 +21,16 @@ static double revmod1(double n)
 	return ceil(n) - n;
 }
 
+// This is for the nextpos function. It's pretty much floor(c). However, when c
+// is a nonzero whole number, it is decremented one more. This is for converting
+// positions to coordinates on the board.
+static size_t tocoord(double c)
+{
+	double f = floor(c);
+	if (f == c && c != 0.0) return (size_t)c - 1;
+	return f;
+}
+
 static const d3d_texture empty_texture = {
 	.width = 1,
 	.height = 1,
@@ -124,7 +134,7 @@ static const d3d_block *nextpos(
 		pos->y += tonext.y;
 		pos->x += tonext.y / dpos->y * dpos->x - copysign(0.0001, dpos->x);
 	}
-	blk = GET(board, blocks, (size_t)floor(pos->x), (size_t)floor(pos->y));
+	blk = GET(board, blocks, tocoord(pos->x), tocoord(pos->y));
 	if (!blk) {
 		*dir = -1;
 		return NULL;
