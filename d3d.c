@@ -196,18 +196,19 @@ static void cast_ray(
 			tx = dimension * txtr->width;
 			ty = txtr->height * dist_y;
 		} else {
-			double tangent = fabs(cam->tans[t]);
-			double newdist = 0.5 / tangent;
+			double newdist = 0.5 / fabs(cam->tans[t]);
 			d3d_vec_s newpos = {
 				cam->pos.x + disp.x / dist * newdist,
 				cam->pos.y + disp.y / dist * newdist
 			};
-			txtr = block->faces[dist_y >= 1. ? D3D_DUP : D3D_DDOWN];
-			tx = (newpos.x - floor(newpos.x)) * txtr->width;
-			ty = (newpos.y - floor(newpos.y)) * txtr->height;
 			if (dist_y >= 1.0) {
-				tx = txtr->width - tx - 1;
-				ty = txtr->height - ty - 1;
+				txtr = block->faces[D3D_DUP];
+				tx = revmod1(newpos.x) * txtr->width;
+				ty = revmod1(newpos.y) * txtr->height;
+			} else {
+				txtr = block->faces[D3D_DDOWN];
+				tx = mod1(newpos.x) * txtr->width;
+				ty = mod1(newpos.y) * txtr->height;
 			}
 		}
 		*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
