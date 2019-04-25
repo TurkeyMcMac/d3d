@@ -204,12 +204,11 @@ static void cast_ray(
 			if (dist_y >= 1.0) {
 				txtr = block->faces[D3D_DUP];
 				tx = revmod1(newpos.x) * txtr->width;
-				ty = revmod1(newpos.y) * txtr->height;
 			} else {
 				txtr = block->faces[D3D_DDOWN];
 				tx = mod1(newpos.x) * txtr->width;
-				ty = mod1(newpos.y) * txtr->height;
 			}
+			ty = mod1(newpos.y) * txtr->height;
 		}
 		*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
 	}
