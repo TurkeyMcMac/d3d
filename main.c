@@ -53,10 +53,17 @@ int main(void)
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(3, 3);
 	memcpy(txtr->pixels, pixels, SIDE * SIDE);
+	brd->blocks[0] = &blk;
+	brd->blocks[1] = &blk;
+	brd->blocks[2] = &blk;
 	brd->blocks[3] = &blk;
+	brd->blocks[4] = &blk;
+	brd->blocks[5] = &blk;
+	brd->blocks[6] = &blk;
+	brd->blocks[7] = &blk;
+	brd->blocks[8] = &blk;
 	cam->pos.x = 0.4;
 	cam->pos.y = 1.4;
-	cam->facing = 5.0;
 	init_pairs();
 	for (;;) {
 		double move_angle;

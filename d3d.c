@@ -7,6 +7,11 @@
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
 		&(grid)->member[(size_t)((y) * (grid)->width + (x))] : NULL)
 
+static double mod1(double n)
+{
+	return n - floor(n);
+}
+
 static const d3d_texture empty_texture = {
 	.width = 1,
 	.height = 1,
@@ -90,25 +95,25 @@ static const d3d_block *nextpos(
 	d3d_vec_s tonext = {INFINITY, INFINITY};
 	d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
 	if (dpos->x < 0.0) {
-		tonext.x = -fmod(pos->x, 1.0);
+		tonext.x = -mod1(pos->x);
 	} else if (dpos->x > 0.0) {
 		ew = D3D_DEAST;
-		tonext.x = 1.0 - fmod(pos->x, 1.0);
+		tonext.x = 1.0 - mod1(pos->x);
 	}
 	if (dpos->y < 0.0) {
 		ns = D3D_DSOUTH;
-		tonext.y = -fmod(pos->y, 1.0);
+		tonext.y = -mod1(pos->y);
 	} else if (dpos->y > 0.0) {
-		tonext.y = 1.0 - fmod(pos->y, 1.0);
+		tonext.y = 1.0 - mod1(pos->y);
 	}
 	if (tonext.x / dpos->x < tonext.y / dpos->y) {
 		*dir = ew;
 		pos->x += tonext.x;
-		pos->y += tonext.x / dpos->x * dpos->y - copysign(0.001, dpos->y);
+		pos->y += tonext.x / dpos->x * dpos->y - copysign(0.0001, dpos->y);
 	} else {
 		*dir = ns;
 		pos->y += tonext.y;
-		pos->x += tonext.y / dpos->y * dpos->x - copysign(0.001, dpos->x);
+		pos->x += tonext.y / dpos->y * dpos->x - copysign(0.0001, dpos->x);
 	}
 	blk = GET(board, blocks, (size_t)floor(pos->x), (size_t)floor(pos->y));
 	if (!blk) {
@@ -165,16 +170,16 @@ static void cast_ray(
 			txtr = block->faces[face];
 			switch (face) {
 			case D3D_DNORTH:
-				dimension = fmod(pos.x, 1.0);
+				dimension = mod1(pos.x);
 				break;
 			case D3D_DSOUTH:
-				dimension = 1.0 - fmod(pos.x, 1.0);
+				dimension = 1.0 - mod1(pos.x);
 				break;
 			case D3D_DWEST:
-				dimension = fmod(pos.y, 1.0);
+				dimension = mod1(pos.y);
 				break;
 			case D3D_DEAST:
-				dimension = 1.0 - fmod(pos.y, 1.0);
+				dimension = 1.0 - mod1(pos.y);
 				break;
 			default:
 				continue;
@@ -184,13 +189,13 @@ static void cast_ray(
 		} else {
 			double tangent = fabs(cam->tans[t]);
 			double newdist = 0.5 / tangent;
-			d3d_vec_s newdisp = {
-				disp.x / dist * newdist,
-				disp.y / dist * newdist
+			d3d_vec_s newpos = {
+				cam->pos.x + disp.x / dist * newdist,
+				cam->pos.y + disp.y / dist * newdist
 			};
 			txtr = block->faces[dist_y >= 1. ? D3D_DUP : D3D_DDOWN];
-			tx = fmod(cam->pos.x + newdisp.x, 1.0) * txtr->width;
-			ty = fmod(cam->pos.y + newdisp.y, 1.0) * txtr->height;
+			tx = (newpos.x - floor(newpos.x)) * txtr->width;
+			ty = (newpos.y - floor(newpos.y)) * txtr->height;
 			if (dist_y >= 1.0) {
 				tx = txtr->width - tx - 1;
 				ty = txtr->height - ty - 1;
