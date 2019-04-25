@@ -7,9 +7,18 @@
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
 		&(grid)->member[(size_t)((y) * (grid)->width + (x))] : NULL)
 
+// Computes fmod(n, 1.0) if n >= 0, or 1.0 + fmod(n, 1.0) if n < 0
+// Returns in the range [0, 1)
 static double mod1(double n)
 {
 	return n - floor(n);
+}
+
+// computes approximately 1.0 - fmod(n, 1.0) if n >= 0 or -fmod(n, 1.0) if n < 0
+// Returns in the range [0, 1)
+static double revmod1(double n)
+{
+	return ceil(n) - n;
 }
 
 static const d3d_texture empty_texture = {
@@ -98,13 +107,13 @@ static const d3d_block *nextpos(
 		tonext.x = -mod1(pos->x);
 	} else if (dpos->x > 0.0) {
 		ew = D3D_DEAST;
-		tonext.x = 1.0 - mod1(pos->x);
+		tonext.x = revmod1(pos->x);
 	}
 	if (dpos->y < 0.0) {
 		ns = D3D_DSOUTH;
 		tonext.y = -mod1(pos->y);
 	} else if (dpos->y > 0.0) {
-		tonext.y = 1.0 - mod1(pos->y);
+		tonext.y = revmod1(pos->y);
 	}
 	if (tonext.x / dpos->x < tonext.y / dpos->y) {
 		*dir = ew;
@@ -173,18 +182,18 @@ static void cast_ray(
 				dimension = mod1(pos.x);
 				break;
 			case D3D_DSOUTH:
-				dimension = 1.0 - mod1(pos.x);
+				dimension = revmod1(pos.x);
 				break;
 			case D3D_DWEST:
 				dimension = mod1(pos.y);
 				break;
 			case D3D_DEAST:
-				dimension = 1.0 - mod1(pos.y);
+				dimension = revmod1(pos.y);
 				break;
 			default:
 				continue;
 			}
-			tx = dimension * (txtr->width - 0.5) + 0.4999;
+			tx = dimension * txtr->width;
 			ty = txtr->height * dist_y;
 		} else {
 			double tangent = fabs(cam->tans[t]);
