@@ -8,8 +8,8 @@ void init_pairs(void)
 {
 	start_color();
 	if (COLOR_PAIRS < 64) return;
-	for (int fg = 0; fg < 7; ++fg) {
-		for (int bg = 0; bg < 7; ++bg) {
+	for (int fg = 0; fg < 8; ++fg) {
+		for (int bg = 0; bg < 8; ++bg) {
 			init_pair((fg << 3 | bg) + 1, fg, bg);
 		}
 	}
