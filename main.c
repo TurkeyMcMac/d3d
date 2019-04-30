@@ -76,7 +76,7 @@ int main(void)
 		for (size_t y = 0; y < cam->height; ++y) {
 			for (size_t x = 0; x < cam->width; ++x) {
 				int p = cam->pixels[y * cam->width + x];
-				mvaddch(y, x, p == ' ' ? ' ' : term_pixel(p));
+				mvaddch(y, x, p <= ' ' ? ' ' : term_pixel(p));
 			}
 		}
 		refresh();
