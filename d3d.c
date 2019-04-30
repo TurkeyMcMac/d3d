@@ -31,6 +31,28 @@ static size_t tocoord(double c)
 	return f;
 }
 
+static void move_dir(d3d_direction dir, size_t *x, size_t *y)
+{
+	switch(dir) {
+	case D3D_DNORTH: --*y; break;
+	case D3D_DSOUTH: ++*y; break;
+	case D3D_DEAST: ++*x; break;
+	case D3D_DWEST: --*x; break;
+	default: break;
+	}
+}
+
+static d3d_direction invert_dir(d3d_direction dir)
+{
+	switch(dir) {
+	case D3D_DNORTH: return D3D_DSOUTH;
+	case D3D_DSOUTH: return D3D_DNORTH;
+	case D3D_DEAST: return D3D_DWEST;
+	case D3D_DWEST: return D3D_DEAST;
+	default: return dir;
+	}
+}
+
 static const d3d_texture empty_texture = {
 	.width = 1,
 	.height = 1,
@@ -110,6 +132,7 @@ static const d3d_block *nextpos(
 	const d3d_vec_s *dpos,
 	d3d_direction *dir)
 {
+	size_t x, y;
 	const d3d_block * const *blk = NULL;
 	d3d_vec_s tonext = {INFINITY, INFINITY};
 	d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
@@ -120,26 +143,37 @@ static const d3d_block *nextpos(
 		tonext.x = revmod1(pos->x);
 	}
 	if (dpos->y < 0.0) {
-		ns = D3D_DSOUTH;
 		tonext.y = -mod1(pos->y);
 	} else if (dpos->y > 0.0) {
+		ns = D3D_DSOUTH;
 		tonext.y = revmod1(pos->y);
 	}
 	if (tonext.x / dpos->x < tonext.y / dpos->y) {
 		*dir = ew;
 		pos->x += tonext.x;
-		pos->y += tonext.x / dpos->x * dpos->y - copysign(0.0001, dpos->y);
+		pos->y += tonext.x / dpos->x * dpos->y;
 	} else {
 		*dir = ns;
 		pos->y += tonext.y;
-		pos->x += tonext.y / dpos->y * dpos->x - copysign(0.0001, dpos->x);
+		pos->x += tonext.y / dpos->y * dpos->x;
 	}
-	blk = GET(board, blocks, tocoord(pos->x), tocoord(pos->y));
-	if (!blk) {
-		*dir = -1;
-		return NULL;
+	x = tocoord(pos->x);
+	y = tocoord(pos->y);
+	blk = GET(board, blocks, x, y);
+	if (!blk) return NULL;
+	if (!(*blk)->faces[*dir]) {
+		move_dir(*dir, &x, &y);
+		blk = GET(board, blocks, x, y);
+		if (!blk) return NULL;
+		if (!(*blk)->faces[invert_dir(*dir)]) {
+			if (*dir == ew) {
+				pos->x += copysign(0.0001, dpos->x);
+			} else {
+				pos->y += copysign(0.0001, dpos->y);
+			}
+			*dir = -1;
+		}
 	}
-	if (!(*blk)->faces[*dir]) *dir = -1;
 	return *blk;
 }
 
@@ -188,10 +222,10 @@ static void cast_ray(
 			double dimension;
 			txtr = block->faces[face];
 			switch (face) {
-			case D3D_DNORTH:
+			case D3D_DSOUTH:
 				dimension = mod1(pos.x);
 				break;
-			case D3D_DSOUTH:
+			case D3D_DNORTH:
 				dimension = revmod1(pos.x);
 				break;
 			case D3D_DWEST:
@@ -211,11 +245,13 @@ static void cast_ray(
 				cam->pos.x + disp.x / dist * newdist,
 				cam->pos.y + disp.y / dist * newdist
 			};
+			size_t bx = tocoord(newpos.x), by = tocoord(newpos.y);
+			const d3d_block *top_bot = *GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
-				txtr = block->faces[D3D_DUP];
+				txtr = top_bot->faces[D3D_DUP];
 				tx = revmod1(newpos.x) * txtr->width;
 			} else {
-				txtr = block->faces[D3D_DDOWN];
+				txtr = top_bot->faces[D3D_DDOWN];
 				tx = mod1(newpos.x) * txtr->width;
 			}
 			ty = mod1(newpos.y) * txtr->height;
