@@ -21,13 +21,13 @@ static double revmod1(double n)
 	return ceil(n) - n;
 }
 
-// This is pretty much floor(c). However, when c is a nonzero whole number, it
-// is decremented one more. This is for converting positions to coordinates on
-// the board.
-static size_t tocoord(double c)
+// This is pretty much floor(c). However, when c is a nonzero whole number and
+// positive is true (that is, the relevant component of the delta position is
+// over 0,) c is decremented and returned.
+static size_t tocoord(double c, bool positive)
 {
 	double f = floor(c);
-	if (f == c && c != 0.0) return (size_t)c - 1;
+	if (positive && f == c && c != 0.0) return (size_t)c - 1;
 	return f;
 }
 
@@ -159,8 +159,8 @@ static const d3d_block *hit_wall(
 			pos->y += tonext.y;
 			pos->x += tonext.y / dpos->y * dpos->x;
 		}
-		x = tocoord(pos->x);
-		y = tocoord(pos->y);
+		x = tocoord(pos->x, dpos->x > 0.0);
+		y = tocoord(pos->y, dpos->y > 0.0);
 		blk = GET(board, blocks, x, y);
 		if (!blk) return NULL;
 		if (!(*blk)->faces[*dir]) {
@@ -234,7 +234,8 @@ static void cast_ray(
 				cam->pos.x + disp.x / dist * newdist,
 				cam->pos.y + disp.y / dist * newdist
 			};
-			size_t bx = tocoord(newpos.x), by = tocoord(newpos.y);
+			size_t bx = tocoord(newpos.x, dpos.x > 0.0),
+			       by = tocoord(newpos.y, dpos.y > 0.0);
 			const d3d_block *top_bot = *GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
 				txtr = top_bot->faces[D3D_DUP];
