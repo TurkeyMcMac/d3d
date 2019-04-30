@@ -21,9 +21,9 @@ static double revmod1(double n)
 	return ceil(n) - n;
 }
 
-// This is for the nextpos function. It's pretty much floor(c). However, when c
-// is a nonzero whole number, it is decremented one more. This is for converting
-// positions to coordinates on the board.
+// This is pretty much floor(c). However, when c is a nonzero whole number, it
+// is decremented one more. This is for converting positions to coordinates on
+// the board.
 static size_t tocoord(double c)
 {
 	double f = floor(c);
