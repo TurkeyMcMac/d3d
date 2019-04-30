@@ -54,9 +54,9 @@ static d3d_direction invert_dir(d3d_direction dir)
 }
 
 static const d3d_texture empty_texture = {
-	.width = 1,
-	.height = 1,
-	.pixels = {0} 
+	.width = 4,
+	.height = 4,
+	.pixels = "$^$^^$^$$^$^^$^$" 
 };
 
 static const d3d_block empty_block = {{
@@ -186,6 +186,8 @@ static void cast_ray(
 	const d3d_board *board,
 	size_t x)
 {
+	static d3d_texture blank_side = { .width = 1, .height = 1, .pixels = " " };
+	d3d_block sides = {{&blank_side, &blank_side, &blank_side, &blank_side, &blank_side, &blank_side}};
 	d3d_direction face;
 	const d3d_block *block;
 	d3d_vec_s pos = cam->pos, disp;
@@ -195,10 +197,7 @@ static void cast_ray(
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
 	block = hit_wall(cam, board, &pos, &dpos, &face);
 	if (!block) {
-		for (size_t y = 0; y < cam->height; ++y) {
-			*GET(cam, pixels, x, y) = ' ';
-		}
-		return;
+		block = &sides;
 	}
 	disp.x = pos.x - cam->pos.x;
 	disp.y = pos.y - cam->pos.y;

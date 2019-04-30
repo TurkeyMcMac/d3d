@@ -58,10 +58,7 @@ int main(void)
 	brd->blocks[2] = &blk;
 	brd->blocks[3] = &blk;
 	brd->blocks[4] = &blk;
-	brd->blocks[7] = &blk;
 	brd->blocks[8] = &blk;
-	brd->blocks[9] = &blk;
-	brd->blocks[10] = &blk;
 	brd->blocks[11] = &blk;
 	brd->blocks[12] = &blk;
 	brd->blocks[13] = &blk;
@@ -94,18 +91,18 @@ int main(void)
 			move_angle -= M_PI / 2;
 			break;
 		case 'q':
-			cam->facing += 0.01;
+			cam->facing += 0.04;
 			continue;
 		case 'e':
-			cam->facing -= 0.01;
+			cam->facing -= 0.04;
 			continue;
 		case 'x':
 			goto end;
 		default:
 			continue;
 		}
-		cam->pos.x += cos(move_angle) * 0.01;
-		cam->pos.y += sin(move_angle) * 0.01;
+		cam->pos.x += cos(move_angle) * 0.02;
+		cam->pos.y += sin(move_angle) * 0.02;
 	}
 end:
 	endwin();

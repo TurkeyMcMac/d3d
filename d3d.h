@@ -24,6 +24,7 @@ typedef struct {
 } d3d_texture;
 
 typedef struct {
+	double scale;
 	d3d_vec_s pos;
 	const d3d_texture *txtr;
 } d3d_sprite;
