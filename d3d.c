@@ -125,15 +125,6 @@ d3d_board *d3d_new_board(size_t width, size_t height)
 	return board;
 }
 
-static const d3d_block *nextpos(
-	d3d_camera *cam,
-	const d3d_board *board,
-	d3d_vec_s *pos,
-	const d3d_vec_s *dpos,
-	d3d_direction *dir)
-{
-}
-
 static const d3d_block *hit_wall(
 	d3d_camera *cam,
 	const d3d_board *board,
