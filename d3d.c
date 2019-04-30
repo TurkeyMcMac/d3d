@@ -132,49 +132,6 @@ static const d3d_block *nextpos(
 	const d3d_vec_s *dpos,
 	d3d_direction *dir)
 {
-	size_t x, y;
-	const d3d_block * const *blk = NULL;
-	d3d_vec_s tonext = {INFINITY, INFINITY};
-	d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
-	if (dpos->x < 0.0) {
-		tonext.x = -mod1(pos->x);
-	} else if (dpos->x > 0.0) {
-		ew = D3D_DEAST;
-		tonext.x = revmod1(pos->x);
-	}
-	if (dpos->y < 0.0) {
-		tonext.y = -mod1(pos->y);
-	} else if (dpos->y > 0.0) {
-		ns = D3D_DSOUTH;
-		tonext.y = revmod1(pos->y);
-	}
-	if (tonext.x / dpos->x < tonext.y / dpos->y) {
-		*dir = ew;
-		pos->x += tonext.x;
-		pos->y += tonext.x / dpos->x * dpos->y;
-	} else {
-		*dir = ns;
-		pos->y += tonext.y;
-		pos->x += tonext.y / dpos->y * dpos->x;
-	}
-	x = tocoord(pos->x);
-	y = tocoord(pos->y);
-	blk = GET(board, blocks, x, y);
-	if (!blk) return NULL;
-	if (!(*blk)->faces[*dir]) {
-		move_dir(*dir, &x, &y);
-		blk = GET(board, blocks, x, y);
-		if (!blk) return NULL;
-		if (!(*blk)->faces[invert_dir(*dir)]) {
-			if (*dir == ew) {
-				pos->x += copysign(0.0001, dpos->x);
-			} else {
-				pos->y += copysign(0.0001, dpos->y);
-			}
-			*dir = -1;
-		}
-	}
-	return *blk;
 }
 
 static const d3d_block *hit_wall(
@@ -186,9 +143,50 @@ static const d3d_block *hit_wall(
 {
 	const d3d_block *block;
 	do {
-		block = nextpos(cam, board, pos, dpos, dir);
-	} while (*dir == -1 && block);
-	if (!block) return NULL;
+		size_t x, y;
+		const d3d_block * const *blk = NULL;
+		d3d_vec_s tonext = {INFINITY, INFINITY};
+		d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
+		if (dpos->x < 0.0) {
+			tonext.x = -mod1(pos->x);
+		} else if (dpos->x > 0.0) {
+			ew = D3D_DEAST;
+			tonext.x = revmod1(pos->x);
+		}
+		if (dpos->y < 0.0) {
+			tonext.y = -mod1(pos->y);
+		} else if (dpos->y > 0.0) {
+			ns = D3D_DSOUTH;
+			tonext.y = revmod1(pos->y);
+		}
+		if (tonext.x / dpos->x < tonext.y / dpos->y) {
+			*dir = ew;
+			pos->x += tonext.x;
+			pos->y += tonext.x / dpos->x * dpos->y;
+		} else {
+			*dir = ns;
+			pos->y += tonext.y;
+			pos->x += tonext.y / dpos->y * dpos->x;
+		}
+		x = tocoord(pos->x);
+		y = tocoord(pos->y);
+		blk = GET(board, blocks, x, y);
+		if (!blk) return NULL;
+		if (!(*blk)->faces[*dir]) {
+			move_dir(*dir, &x, &y);
+			blk = GET(board, blocks, x, y);
+			if (!blk) return NULL;
+			if (!(*blk)->faces[invert_dir(*dir)]) {
+				if (*dir == ew) {
+					pos->x += copysign(0.0001, dpos->x);
+				} else {
+					pos->y += copysign(0.0001, dpos->y);
+				}
+				*dir = -1;
+			}
+		}
+		block = *blk;
+	} while (*dir == -1);
 	return block;
 }
 
