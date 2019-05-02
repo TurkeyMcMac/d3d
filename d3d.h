@@ -59,6 +59,15 @@ d3d_texture *d3d_new_texture(size_t width, size_t height);
 
 d3d_board *d3d_new_board(size_t width, size_t height);
 
+void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x);
+
+void d3d_draw_walls(d3d_camera *cam, const d3d_board *board);
+
+void d3d_draw_sprites(
+	d3d_camera *cam,
+	const d3d_sprite sprites[],
+	size_t n_sprites);
+
 void d3d_draw(
 	d3d_camera *cam,
 	const d3d_sprite sprites[],

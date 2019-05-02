@@ -181,10 +181,7 @@ static const d3d_block *hit_wall(
 	return block;
 }
 
-static void cast_ray(
-	d3d_camera *cam,
-	const d3d_board *board,
-	size_t x)
+void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 {
 	d3d_direction face;
 	const d3d_block *block;
@@ -250,20 +247,27 @@ static void cast_ray(
 	}
 }
 
-void d3d_draw(
-	d3d_camera *cam,
-	const d3d_sprite sprites[],
-	size_t n_sprites,
-	const d3d_board *board)
+void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 {
 	for (size_t x = 0; x < cam->width; ++x) {
-		cast_ray(cam, board, x);
+		d3d_draw_column(cam, board, x);
+	}
+}
+
+void d3d_draw_sprites(
+	d3d_camera *cam,
+	const d3d_sprite sprites[],
+	size_t n_sprites)
+{
+	for (size_t x = 0; x < cam->width; ++x) {
+		d3d_draw_column(cam, board, x);
 	}
 	for (size_t s = 0; s < n_sprites; ++s) {
 		const d3d_sprite *sp = &sprites[s];
 		d3d_vec_s disp = {
 			sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y
 		};
+
 		double dist, angle, width, height;
 		dist = hypot(disp.x, disp.y);
 		if (dist == 0.0) continue;
@@ -271,4 +275,14 @@ void d3d_draw(
 		width = atan(sp->scale.x / dist);
 		height = atan(sp->scale.y / dist);
 	}
+}
+
+void d3d_draw(
+	d3d_camera *cam,
+	const d3d_sprite sprites[],
+	size_t n_sprites,
+	const d3d_board *board)
+{
+	d3d_draw_walls(cam, board);
+	d3d_draw_sprites(cam, sprites, n_sprites);
 }
