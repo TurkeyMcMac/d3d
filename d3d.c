@@ -259,9 +259,6 @@ void d3d_draw_sprites(
 	const d3d_sprite sprites[],
 	size_t n_sprites)
 {
-	for (size_t x = 0; x < cam->width; ++x) {
-		d3d_draw_column(cam, board, x);
-	}
 	for (size_t s = 0; s < n_sprites; ++s) {
 		const d3d_sprite *sp = &sprites[s];
 		d3d_vec_s disp = {
