@@ -253,9 +253,22 @@ static void cast_ray(
 void d3d_draw(
 	d3d_camera *cam,
 	const d3d_sprite sprites[],
+	size_t n_sprites,
 	const d3d_board *board)
 {
 	for (size_t x = 0; x < cam->width; ++x) {
 		cast_ray(cam, board, x);
+	}
+	for (size_t s = 0; s < n_sprites; ++s) {
+		const d3d_sprite *sp = &sprites[s];
+		d3d_vec_s disp = {
+			sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y
+		};
+		double dist, angle, width, height;
+		dist = hypot(disp.x, disp.y);
+		if (dist == 0.0) continue;
+		angle = atan2(disp.y, disp.x);
+		width = atan(sp->scale.x / dist);
+		height = atan(sp->scale.y / dist);
 	}
 }

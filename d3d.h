@@ -25,7 +25,9 @@ typedef struct {
 
 typedef struct {
 	d3d_vec_s pos;
+	d3d_vec_s scale;
 	const d3d_texture *txtr;
+	d3d_pixel transparent;
 } d3d_sprite;
 
 typedef struct {
@@ -60,6 +62,7 @@ d3d_board *d3d_new_board(size_t width, size_t height);
 void d3d_draw(
 	d3d_camera *cam,
 	const d3d_sprite sprites[],
+	size_t n_sprites,
 	const d3d_board *board);
 
 #endif /* D3D_H_ */

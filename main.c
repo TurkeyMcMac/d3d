@@ -72,7 +72,7 @@ int main(void)
 	init_pairs();
 	for (;;) {
 		double move_angle;
-		d3d_draw(cam, NULL, brd);
+		d3d_draw(cam, NULL, 0, brd);
 		for (size_t y = 0; y < cam->height; ++y) {
 			for (size_t x = 0; x < cam->width; ++x) {
 				int p = cam->pixels[y * cam->width + x];
