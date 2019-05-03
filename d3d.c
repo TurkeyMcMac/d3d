@@ -74,16 +74,18 @@ d3d_camera *d3d_new_camera(
 		size_t width,
 		size_t height)
 {
-	size_t base_size, pixels_size, tans_size, size;
+	size_t base_size, pixels_size, tans_size, dists_size, size;
 	d3d_camera *cam;
 	base_size = offsetof(d3d_camera, pixels);
 	pixels_size = width * height * sizeof(d3d_pixel);
 	pixels_size += sizeof(double) - pixels_size % sizeof(double);
 	tans_size = height * sizeof(double);
-	size = base_size + pixels_size + tans_size;
+	dists_size = width * sizeof(double);
+	size = base_size + pixels_size + tans_size + dists_size;
 	cam = malloc(size);
 	if (!cam) return NULL;
-	cam->tans = (void *)cam + size - tans_size;
+	cam->tans = (void *)cam + size - dists_size - tans_size;
+	cam->dists = (void *)cam + size - dists_size;
 	cam->fov.x = fovx;
 	cam->fov.y = fovy;
 	cam->width = width;
@@ -200,6 +202,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	disp.x = pos.x - cam->pos.x;
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
+	cam->dists[x] = dist;
 	for (size_t t = 0; t < cam->height; ++t) {
 		const d3d_texture *txtr;
 		size_t tx, ty;
@@ -273,7 +276,7 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 	for (size_t x = 0; x < width; ++x) {
 		size_t cx, sx;
 		cx = x + start_x;
-		if (cx >= cam->width) continue;
+		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
 		sx = (double)x / width * sp->txtr->width / sp->scale.x;
 		for (size_t y = 0; y < height; ++y) {
 			long cy, sy;
@@ -282,7 +285,10 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 			sy = (double)y
 				/ height * sp->txtr->height / sp->scale.y;
 			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
+			if (p != sp->transparent) {
+				cam->dists[cx] = dist;
+				*GET(cam, pixels, cx, cy) = p;
+			}
 		}
 	}
 }

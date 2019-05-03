@@ -15,6 +15,7 @@ typedef struct {
 	double facing;
 	size_t width, height;
 	double *tans;
+	double *dists;
 	d3d_pixel pixels[];
 } d3d_camera;
 
