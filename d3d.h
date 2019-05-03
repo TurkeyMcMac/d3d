@@ -63,6 +63,8 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x);
 
 void d3d_draw_walls(d3d_camera *cam, const d3d_board *board);
 
+void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp);
+
 void d3d_draw_sprites(
 	d3d_camera *cam,
 	const d3d_sprite sprites[],

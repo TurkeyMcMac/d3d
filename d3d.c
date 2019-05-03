@@ -254,42 +254,40 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 	}
 }
 
+void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
+{
+
+	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
+	double dist, angle, width, height, maxdiff;
+	d3d_vec_s start;
+	dist = hypot(disp.x, disp.y);
+	if (dist == 0.0) return;
+	angle = atan2(disp.y, disp.x);
+	width = atan(sp->scale.x / dist);
+	maxdiff = (cam->fov.x + width) / 2 ;
+	if (fabs(angle - cam->facing) > maxdiff) return;
+	height = atan(sp->scale.y / dist);
+	start.x = (cam->facing - angle + maxdiff) / 2 / M_PI;
+	start.y = (cam->fov.y - height) / 4 / M_PI;
+	for (size_t x = 0; x < width / cam->fov.x * cam->width; ++x) {
+		size_t cx = x + start.x * cam->width;
+		size_t sx = (double)x / cam->width * sp->txtr->width;
+		for (size_t y = 0; y < height / cam->fov.y * cam->height; ++y) {
+			size_t cy = y + start.y * cam->height;
+			size_t sy = (double)y / cam->height * sp->txtr->height;
+			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
+			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
+		}
+	}
+}
+
 void d3d_draw_sprites(
 	d3d_camera *cam,
 	const d3d_sprite sprites[],
 	size_t n_sprites)
 {
 	for (size_t s = 0; s < n_sprites; ++s) {
-		const d3d_sprite *sp = &sprites[s];
-		d3d_vec_s disp = {
-			sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y
-		};
-		double dist, angle, width, height, maxdiff;
-		d3d_vec_s start;
-		dist = hypot(disp.x, disp.y);
-		if (dist == 0.0) continue;
-		angle = atan2(disp.y, disp.x);
-		width = atan(sp->scale.x / dist);
-		maxdiff = (cam->fov.x + width) / 2 ;
-		if (fabs(angle - cam->facing) > maxdiff) continue;
-		height = atan(sp->scale.y / dist);
-		start.x = (cam->facing - angle + maxdiff) / 2 / M_PI;
-		start.y = (cam->fov.y - height) / 4 / M_PI;
-		for (size_t x = 0; x < width / cam->fov.x * cam->width; ++x) {
-			size_t cx = x + start.x * cam->width;
-			size_t sx = (double)x / cam->width * sp->txtr->width;
-			for (size_t y = 0;
-			     y < height / cam->fov.y * cam->height;
-			     ++y)
-			{
-				size_t cy = y + start.y * cam->height;
-				size_t sy = (double)y / cam->height
-					* sp->txtr->height;
-				d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-				if (p != sp->transparent)
-					*GET(cam, pixels, cx, cy) = p;
-			}
-		}
+		d3d_draw_sprite(cam, &sprites[s]);
 	}
 }
 
