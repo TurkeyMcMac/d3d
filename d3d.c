@@ -258,28 +258,30 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
 	double dist, angle, width, height, maxdiff;
-	d3d_vec_s start;
+	size_t start_x, start_y;
 	dist = hypot(disp.x, disp.y);
 	if (dist == 0.0) return;
 	angle = atan2(disp.y, disp.x);
-	width = atan(sp->scale.x / dist);
+	width = atan(sp->scale.x / dist) * 2;
 	maxdiff = (cam->fov.x + width) / 2 ;
 	if (fabs(angle - cam->facing) > maxdiff) return;
-	height = atan(sp->scale.y / dist) * 2;
-	start.x = (cam->facing - angle + maxdiff) / 2 / M_PI;
-	start.y = (cam->fov.y - height) / 4 / M_PI;
+	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
 	width = width / cam->fov.x * cam->width;
-	height = height / cam->fov.y * cam->height;
+	start_x = (cam->width - width) / 2 + (cam->facing - angle) / cam->fov.x
+		* cam->width;
+	start_y = (cam->height - height) / 2;
 	for (size_t x = 0; x < width; ++x) {
-		size_t cx = x + start.x * cam->width;
-		size_t sx = (double)x
-			/ width * sp->txtr->width / sp->scale.x;
+		size_t cx, sx;
+		cx = x + start_x;
+		sx = (double)x / width * sp->txtr->width / sp->scale.x;
 		for (size_t y = 0; y < height; ++y) {
-			size_t cy = y + start.y * cam->height;
-			size_t sy = (double)y
+			size_t cy, sy;
+			cy = y + start_y;
+			sy = (double)y
 				/ height * sp->txtr->height / sp->scale.y;
-			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
+			const d3d_pixel *p = GET(sp->txtr, pixels, sx, sy);
+			if (p && *p != sp->transparent)
+				*GET(cam, pixels, cx, cy) = *p;
 		}
 	}
 }
