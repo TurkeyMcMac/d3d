@@ -256,7 +256,6 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 
 void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 {
-
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
 	double dist, angle, width, height, maxdiff;
 	d3d_vec_s start;
