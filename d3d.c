@@ -266,7 +266,7 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 	width = atan(sp->scale.x / dist);
 	maxdiff = (cam->fov.x + width) / 2 ;
 	if (fabs(angle - cam->facing) > maxdiff) return;
-	height = atan(sp->scale.y / dist);
+	height = atan(sp->scale.y / dist) * 2;
 	start.x = (cam->facing - angle + maxdiff) / 2 / M_PI;
 	start.y = (cam->fov.y - height) / 4 / M_PI;
 	for (size_t x = 0; x < width / cam->fov.x * cam->width; ++x) {
