@@ -277,13 +277,12 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 		size_t cx, sx;
 		cx = x + start_x;
 		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
-		sx = (double)x / width * sp->txtr->width / sp->scale.x;
+		sx = (double)x / width * sp->txtr->width;
 		for (size_t y = 0; y < height; ++y) {
 			long cy, sy;
 			cy = y + start_y;
 			if (cy >= cam->height) continue;
-			sy = (double)y
-				/ height * sp->txtr->height / sp->scale.y;
+			sy = (double)y / height * sp->txtr->height;
 			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
 			if (p != sp->transparent) {
 				cam->dists[cx] = dist;
