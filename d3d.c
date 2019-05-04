@@ -314,26 +314,6 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
 	}
 }
 
-void d3d_draw_sprites(
-	d3d_camera *cam,
-	const d3d_sprite_s sprites[],
-	size_t n_sprites)
-{
-	for (size_t s = 0; s < n_sprites; ++s) {
-		d3d_draw_sprite(cam, &sprites[s]);
-	}
-}
-
-void d3d_draw(
-	d3d_camera *cam,
-	const d3d_sprite_s sprites[],
-	size_t n_sprites,
-	const d3d_board *board)
-{
-	d3d_draw_walls(cam, board);
-	d3d_draw_sprites(cam, sprites, n_sprites);
-}
-
 size_t d3d_camera_width(const d3d_camera *cam)
 {
 	return cam->width;

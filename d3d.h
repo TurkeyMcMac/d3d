@@ -73,15 +73,4 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board);
 
 void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp);
 
-void d3d_draw_sprites(
-	d3d_camera *cam,
-	const d3d_sprite_s sprites[],
-	size_t n_sprites);
-
-void d3d_draw(
-	d3d_camera *cam,
-	const d3d_sprite_s sprites[],
-	size_t n_sprites,
-	const d3d_board *board);
-
 #endif /* D3D_H_ */

@@ -75,7 +75,7 @@ int main(void)
 	init_pairs();
 	for (;;) {
 		double move_angle;
-		d3d_draw(cam, NULL, 0, brd);
+		d3d_draw_walls(cam, brd);
 		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
 				int p = *d3d_camera_get(cam, x, y);
