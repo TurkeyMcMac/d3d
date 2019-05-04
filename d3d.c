@@ -4,6 +4,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct d3d_texture_s {
+	size_t width, height;
+	d3d_pixel pixels[];
+};
+
+struct d3d_camera_s {
+	d3d_vec_s pos;
+	d3d_vec_s fov;
+	double facing;
+	size_t width, height;
+	double *tans;
+	double *dists;
+	d3d_pixel pixels[];
+};
+
+struct d3d_board {
+	size_t width, height;
+	const d3d_block_s *blocks[];
+};
+
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
 		&(grid)->member[(size_t)((y) * (grid)->width + (x))] : NULL)
 
@@ -53,7 +73,7 @@ static d3d_direction invert_dir(d3d_direction dir)
 	}
 }
 
-static const d3d_block empty_block = {{
+static const d3d_block_s empty_block = {{
 	NULL,
 	NULL,
 	NULL,
@@ -110,7 +130,7 @@ d3d_texture *d3d_new_texture(size_t width, size_t height)
 
 d3d_board *d3d_new_board(size_t width, size_t height)
 {
-	size_t blocks_size = width * height * sizeof(d3d_block *);
+	size_t blocks_size = width * height * sizeof(d3d_block_s *);
 	d3d_board *board = malloc(offsetof(d3d_board, blocks) + blocks_size);
 	if (!board) return NULL;
 	board->width = width;
@@ -121,17 +141,17 @@ d3d_board *d3d_new_board(size_t width, size_t height)
 	return board;
 }
 
-static const d3d_block *hit_wall(
+static const d3d_block_s *hit_wall(
 	d3d_camera *cam,
 	const d3d_board *board,
 	d3d_vec_s *pos,
 	const d3d_vec_s *dpos,
 	d3d_direction *dir)
 {
-	const d3d_block *block;
+	const d3d_block_s *block;
 	do {
 		size_t x, y;
-		const d3d_block * const *blk = NULL;
+		const d3d_block_s * const *blk = NULL;
 		d3d_vec_s tonext = {INFINITY, INFINITY};
 		d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
 		if (dpos->x < 0.0) {
@@ -180,7 +200,7 @@ static const d3d_block *hit_wall(
 void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 {
 	d3d_direction face;
-	const d3d_block *block;
+	const d3d_block_s *block;
 	d3d_vec_s pos = cam->pos, disp;
 	double dist;
 	double angle =
@@ -230,7 +250,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			};
 			size_t bx = tocoord(newpos.x, dpos.x > 0.0),
 			       by = tocoord(newpos.y, dpos.y > 0.0);
-			const d3d_block *top_bot = *GET(board, blocks, bx, by);
+			const d3d_block_s *top_bot = *GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
 				txtr = top_bot->faces[D3D_DUP];
 				if (!txtr) goto no_texture;
@@ -257,7 +277,7 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 	}
 }
 
-void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
+void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
 	double dist, angle, width, height, maxdiff;
@@ -294,7 +314,7 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite *sp)
 
 void d3d_draw_sprites(
 	d3d_camera *cam,
-	const d3d_sprite sprites[],
+	const d3d_sprite_s sprites[],
 	size_t n_sprites)
 {
 	for (size_t s = 0; s < n_sprites; ++s) {
@@ -304,10 +324,50 @@ void d3d_draw_sprites(
 
 void d3d_draw(
 	d3d_camera *cam,
-	const d3d_sprite sprites[],
+	const d3d_sprite_s sprites[],
 	size_t n_sprites,
 	const d3d_board *board)
 {
 	d3d_draw_walls(cam, board);
 	d3d_draw_sprites(cam, sprites, n_sprites);
+}
+
+size_t d3d_camera_width(const d3d_camera *cam)
+{
+	return cam->width;
+}
+
+size_t d3d_camera_height(const d3d_camera *cam)
+{
+	return cam->height;
+}
+
+d3d_vec_s *d3d_camera_position(d3d_camera *cam)
+{
+	return &cam->pos;
+}
+
+double *d3d_camera_facing(d3d_camera *cam)
+{
+	return &cam->facing;
+}
+
+d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y)
+{
+	return GET(cam, pixels, x, y);
+}
+
+d3d_pixel *d3d_get_texture_pixels(d3d_texture *txtr)
+{
+	return txtr->pixels;
+}
+
+d3d_pixel *d3d_texture_get(d3d_texture *txtr, size_t x, size_t y)
+{
+	return GET(txtr, pixels, x, y);
+}
+
+const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y)
+{
+	return GET(board, blocks, x, y);
 }

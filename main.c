@@ -49,38 +49,40 @@ int main(void)
 	;
 	initscr();
 	d3d_texture *txtr = d3d_new_texture(SIDE, SIDE);
-	d3d_block blk = {{txtr, txtr, txtr, txtr, txtr, txtr}};
+	d3d_block_s blk = {{txtr, txtr, txtr, txtr, txtr, txtr}};
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
-	memcpy(txtr->pixels, pixels, SIDE * SIDE);
-	brd->blocks[0] = &blk;
-	brd->blocks[1] = &blk;
-	brd->blocks[2] = &blk;
-	brd->blocks[3] = &blk;
-	brd->blocks[4] = &blk;
-	brd->blocks[7] = &blk;
-	brd->blocks[8] = &blk;
-	brd->blocks[9] = &blk;
-	brd->blocks[10] = &blk;
-	brd->blocks[11] = &blk;
-	brd->blocks[12] = &blk;
-	brd->blocks[13] = &blk;
-	brd->blocks[14] = &blk;
-	brd->blocks[15] = &blk;
-	cam->pos.x = 1.4;
-	cam->pos.y = 1.4;
+	memcpy(d3d_get_texture_pixels(txtr), pixels, SIDE * SIDE);
+	*d3d_board_get(brd, 0, 0) = &blk;
+	*d3d_board_get(brd, 1, 0) = &blk;
+	*d3d_board_get(brd, 2, 0) = &blk;
+	*d3d_board_get(brd, 3, 0) = &blk;
+	*d3d_board_get(brd, 0, 1) = &blk;
+	*d3d_board_get(brd, 1, 1) = &blk;
+	*d3d_board_get(brd, 2, 1) = &blk;
+	*d3d_board_get(brd, 3, 1) = &blk;
+	*d3d_board_get(brd, 0, 2) = &blk;
+	*d3d_board_get(brd, 1, 2) = &blk;
+	*d3d_board_get(brd, 2, 2) = &blk;
+	*d3d_board_get(brd, 3, 2) = &blk;
+	*d3d_board_get(brd, 0, 3) = &blk;
+	*d3d_board_get(brd, 1, 3) = &blk;
+	*d3d_board_get(brd, 2, 3) = &blk;
+	*d3d_board_get(brd, 3, 3) = &blk;
+	d3d_camera_position(cam)->x = 1.4;
+	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
 	for (;;) {
 		double move_angle;
 		d3d_draw(cam, NULL, 0, brd);
-		for (size_t y = 0; y < cam->height; ++y) {
-			for (size_t x = 0; x < cam->width; ++x) {
-				int p = cam->pixels[y * cam->width + x];
+		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
+			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
+				int p = *d3d_camera_get(cam, x, y);
 				mvaddch(y, x, p <= ' ' ? ' ' : term_pixel(p));
 			}
 		}
 		refresh();
-		move_angle = cam->facing;
+		move_angle = *d3d_camera_facing(cam);
 		switch (getch()) {
 		case 'w':
 			break;
@@ -94,18 +96,18 @@ int main(void)
 			move_angle -= M_PI / 2;
 			break;
 		case 'q':
-			cam->facing += 0.01;
+			*d3d_camera_facing(cam) += 0.04;
 			continue;
 		case 'e':
-			cam->facing -= 0.01;
+			*d3d_camera_facing(cam) -= 0.04;
 			continue;
 		case 'x':
 			goto end;
 		default:
 			continue;
 		}
-		cam->pos.x += cos(move_angle) * 0.01;
-		cam->pos.y += sin(move_angle) * 0.01;
+		d3d_camera_position(cam)->x += cos(move_angle) * 0.04;
+		d3d_camera_position(cam)->y += sin(move_angle) * 0.04;
 	}
 end:
 	endwin();
