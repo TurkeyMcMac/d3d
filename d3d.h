@@ -53,7 +53,7 @@ d3d_vec_s *d3d_camera_position(d3d_camera *cam);
 
 double *d3d_camera_facing(d3d_camera *cam);
 
-d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y);
+const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y);
 
 void d3d_free_camera(d3d_camera *cam);
 
