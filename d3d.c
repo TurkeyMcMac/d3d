@@ -53,19 +53,13 @@ static d3d_direction invert_dir(d3d_direction dir)
 	}
 }
 
-static const d3d_texture empty_texture = {
-	.width = 1,
-	.height = 1,
-	.pixels = {0} 
-};
-
 static const d3d_block empty_block = {{
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	&empty_texture,
-	&empty_texture
+	NULL,
+	NULL
 }};
 
 d3d_camera *d3d_new_camera(
@@ -239,14 +233,20 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			const d3d_block *top_bot = *GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
 				txtr = top_bot->faces[D3D_DUP];
+				if (!txtr) goto no_texture;
 				tx = revmod1(newpos.x) * txtr->width;
 			} else {
 				txtr = top_bot->faces[D3D_DDOWN];
+				if (!txtr) goto no_texture;
 				tx = mod1(newpos.x) * txtr->width;
 			}
 			ty = mod1(newpos.y) * txtr->height;
 		}
 		*GET(cam, pixels, x, t) = *GET(txtr, pixels, tx, ty);
+		continue;
+
+	no_texture:
+		*GET(cam, pixels, x, t) = ' ';
 	}
 }
 
