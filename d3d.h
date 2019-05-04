@@ -47,6 +47,8 @@ size_t d3d_camera_width(const d3d_camera *cam);
 
 size_t d3d_camera_height(const d3d_camera *cam);
 
+d3d_pixel *d3d_camera_empty_pixel(d3d_camera *cam);
+
 d3d_vec_s *d3d_camera_position(d3d_camera *cam);
 
 double *d3d_camera_facing(d3d_camera *cam);

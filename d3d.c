@@ -14,6 +14,7 @@ struct d3d_camera_s {
 	d3d_vec_s fov;
 	double facing;
 	size_t width, height;
+	d3d_pixel empty_pixel;
 	double *tans;
 	double *dists;
 	d3d_pixel pixels[];
@@ -104,6 +105,7 @@ d3d_camera *d3d_new_camera(
 	cam->fov.y = fovy;
 	cam->width = width;
 	cam->height = height;
+	cam->empty_pixel = 0;
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
@@ -209,7 +211,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	block = hit_wall(cam, board, &pos, &dpos, &face);
 	if (!block) {
 		for (size_t y = 0; y < cam->height; ++y) {
-			*GET(cam, pixels, x, y) = ' ';
+			*GET(cam, pixels, x, y) = cam->empty_pixel;
 		}
 		return;
 	}
@@ -266,7 +268,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 		continue;
 
 	no_texture:
-		*GET(cam, pixels, x, t) = ' ';
+		*GET(cam, pixels, x, t) = cam->empty_pixel;
 	}
 }
 
@@ -340,6 +342,11 @@ size_t d3d_camera_width(const d3d_camera *cam)
 size_t d3d_camera_height(const d3d_camera *cam)
 {
 	return cam->height;
+}
+
+d3d_pixel *d3d_camera_empty_pixel(d3d_camera *cam)
+{
+	return &cam->empty_pixel;
 }
 
 d3d_vec_s *d3d_camera_position(d3d_camera *cam)

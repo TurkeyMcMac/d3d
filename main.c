@@ -53,6 +53,7 @@ int main(void)
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
 	memcpy(d3d_get_texture_pixels(txtr), pixels, SIDE * SIDE);
+	*d3d_camera_empty_pixel(cam) = ' ';
 	*d3d_board_get(brd, 0, 0) = &blk;
 	*d3d_board_get(brd, 1, 0) = &blk;
 	*d3d_board_get(brd, 2, 0) = &blk;
