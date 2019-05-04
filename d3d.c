@@ -84,8 +84,8 @@ d3d_camera *d3d_new_camera(
 	size = base_size + pixels_size + tans_size + dists_size;
 	cam = malloc(size);
 	if (!cam) return NULL;
-	cam->tans = (void *)cam + size - dists_size - tans_size;
-	cam->dists = (void *)cam + size - dists_size;
+	cam->tans = (void *)((char *)cam + size - dists_size - tans_size);
+	cam->dists = (void *)((char *)cam + size - dists_size);
 	cam->fov.x = fovx;
 	cam->fov.y = fovy;
 	cam->width = width;
