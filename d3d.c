@@ -46,6 +46,16 @@ static double revmod1(double n)
 	return ceil(n) - n;
 }
 
+// Compute the difference between the two angles (each themselves between 0 and
+// 2π.) The result is between -π and π.
+static double angle_diff(double a1, double a2)
+{
+	double diff = a1 - a2;
+	if (diff > M_PI) return -2 * M_PI + diff;
+	if (diff < -M_PI) return -diff - 2 * M_PI;
+	return diff;
+}
+
 // This is pretty much floor(c). However, when c is a nonzero whole number and
 // positive is true (that is, the relevant component of the delta position is
 // over 0,) c is decremented and returned.
@@ -296,17 +306,17 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
-	double angle, width, height, maxdiff;
+	double angle, width, height, diff, maxdiff;
 	size_t start_x, start_y;
 	if (dist == 0.0) return;
 	angle = atan2(disp.y, disp.x);
 	width = atan(sp->scale.x / dist) * 2;
 	maxdiff = (cam->fov.x + width) / 2 ;
-	if (fabs(angle - cam->facing) > maxdiff) return;
+	diff = angle_diff(cam->facing, angle);
+	if (fabs(diff) > maxdiff) return;
 	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
 	width = width / cam->fov.x * cam->width;
-	start_x = (cam->width - width) / 2 + (cam->facing - angle) / cam->fov.x
-		* cam->width;
+	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
 	start_y = (cam->height - height) / 2;
 	for (size_t x = 0; x < width; ++x) {
 		size_t cx, sx;
