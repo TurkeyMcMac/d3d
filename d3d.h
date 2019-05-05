@@ -67,6 +67,8 @@ d3d_board *d3d_new_board(size_t width, size_t height);
 
 const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 
+void d3d_start_frame(d3d_camera *cam);
+
 void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x);
 
 void d3d_draw_walls(d3d_camera *cam, const d3d_board *board);

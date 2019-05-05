@@ -28,6 +28,10 @@ struct d3d_board {
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
 		&(grid)->member[(size_t)((y) * (grid)->width + (x))] : NULL)
 
+#ifndef M_PI
+#	define M_PI 3.14159265358979323846
+#endif
+
 // Computes fmod(n, 1.0) if n >= 0, or 1.0 + fmod(n, 1.0) if n < 0
 // Returns in the range [0, 1)
 static double mod1(double n)
@@ -273,8 +277,17 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	}
 }
 
+void d3d_start_frame(d3d_camera *cam)
+{
+	cam->facing = fmod(cam->facing, 2 * M_PI);
+	if (cam->facing < 0.0) {
+		cam->facing += 2 * M_PI;
+	}
+}
+
 void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 {
+	d3d_start_frame(cam);
 	for (size_t x = 0; x < cam->width; ++x) {
 		d3d_draw_column(cam, board, x);
 	}
