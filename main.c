@@ -25,6 +25,8 @@ int term_pixel(int p)
 	return COLOR_PAIR(p - ' ') | '#';
 }
 
+#define SPRITE_SIDE 3
+
 #define SIDE 21
 int main(void)
 {
@@ -51,12 +53,34 @@ int main(void)
 		"....................."
 		"....................."
 	;
+	static const char sprite_pixels[SPRITE_SIDE * SPRITE_SIDE] =
+		" @ "
+		"@@@"
+		" @ "
+	;
 	initscr();
 	d3d_texture *txtr = d3d_new_texture(SIDE, SIDE);
+	d3d_texture *sprite_txtr = d3d_new_texture(SPRITE_SIDE, SPRITE_SIDE);
 	d3d_block_s blk = {{txtr, txtr, txtr, txtr, txtr, txtr}};
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
+	d3d_sprite_s sprites[2] = {
+		{
+			.txtr = txtr,
+			.transparent = '.',
+			.pos = {1.2, 1.5},
+			.scale = {0.2, 0.3}
+		},
+		{
+			.txtr = sprite_txtr,
+			.transparent = ' ',
+			.pos = {1.5, 1.6},
+			.scale = {0.2, 0.3}
+		}
+	};
 	memcpy(d3d_get_texture_pixels(txtr), pixels, SIDE * SIDE);
+	memcpy(d3d_get_texture_pixels(sprite_txtr), sprite_pixels,
+		SPRITE_SIDE * SPRITE_SIDE);
 	*d3d_camera_empty_pixel(cam) = ' ';
 	*d3d_board_get(brd, 0, 0) = &blk;
 	*d3d_board_get(brd, 1, 0) = &blk;
@@ -80,6 +104,7 @@ int main(void)
 	for (;;) {
 		double move_angle;
 		d3d_draw_walls(cam, brd);
+		d3d_draw_sprites(cam, 2, sprites);
 		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
 				int p = *d3d_camera_get(cam, x, y);
