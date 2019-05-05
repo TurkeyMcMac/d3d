@@ -280,12 +280,11 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 	}
 }
 
-void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
+static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
-	double dist, angle, width, height, maxdiff;
+	double angle, width, height, maxdiff;
 	size_t start_x, start_y;
-	dist = hypot(disp.x, disp.y);
 	if (dist == 0.0) return;
 	angle = atan2(disp.y, disp.x);
 	width = atan(sp->scale.x / dist) * 2;
@@ -307,12 +306,49 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
 			if (cy >= cam->height) continue;
 			sy = (double)y / height * sp->txtr->height;
 			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-			if (p != sp->transparent) {
-				cam->dists[cx] = dist;
-				*GET(cam, pixels, cx, cy) = p;
-			}
+			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
 		}
 	}
+}
+
+static int compar_sprite_order(const void *a, const void *b)
+{
+	double dist_a = *(double *)a, dist_b = *(double *)b;
+	if (dist_a > dist_b) return 1;
+	if (dist_a < dist_b) return -1;
+	return 0;
+}
+
+void d3d_draw_sprites(
+	d3d_camera *cam,
+	size_t n_sprites,
+	const d3d_sprite_s sprites[])
+{
+	struct {
+		double dist;
+		size_t index;
+	} *sorted = malloc(n_sprites * sizeof(*sorted));
+	size_t i;
+	for (i = 0; i < n_sprites; ++i) {
+		d3d_vec_s disp = {
+			sprites[i].pos.x - cam->pos.x,
+			sprites[i].pos.y - cam->pos.y
+		};
+		sorted[i].dist = hypot(disp.x, disp.y);
+		sorted[i].index = i;
+	}
+	qsort(sorted, n_sprites, sizeof(*sorted), compar_sprite_order);
+	i = n_sprites;
+	while (i--) {
+		draw_sprite(cam, &sprites[sorted[i].index], sorted[i].dist);
+	}
+	free(sorted);
+}
+
+void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
+{
+	draw_sprite(cam, sp,
+		hypot(sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y));
 }
 
 size_t d3d_camera_width(const d3d_camera *cam)
