@@ -252,7 +252,8 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			};
 			size_t bx = tocoord(newpos.x, dpos.x > 0.0),
 			       by = tocoord(newpos.y, dpos.y > 0.0);
-			const d3d_block_s *top_bot = *GET(board, blocks, bx, by);
+			const d3d_block_s *top_bot =
+				*GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
 				txtr = top_bot->faces[D3D_DUP];
 				if (!txtr) goto no_texture;
