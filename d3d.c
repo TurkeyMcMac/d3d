@@ -9,12 +9,19 @@ struct d3d_texture_s {
 	d3d_pixel pixels[];
 };
 
+struct sprite_order {
+	double dist;
+	size_t index;
+};
+
 struct d3d_camera_s {
 	d3d_vec_s pos;
 	d3d_vec_s fov;
 	double facing;
 	size_t width, height;
 	d3d_pixel empty_pixel;
+	struct sprite_order *order;
+	size_t order_buf_cap;
 	double *tans;
 	double *dists;
 	d3d_pixel pixels[];
@@ -120,6 +127,8 @@ d3d_camera *d3d_new_camera(
 	cam->width = width;
 	cam->height = height;
 	cam->empty_pixel = 0;
+	cam->order = NULL;
+	cam->order_buf_cap = 0;
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
@@ -130,6 +139,7 @@ d3d_camera *d3d_new_camera(
 
 void d3d_free_camera(d3d_camera *cam)
 {
+	free(cam->order);
 	free(cam);
 }
 
@@ -347,25 +357,27 @@ void d3d_draw_sprites(
 	size_t n_sprites,
 	const d3d_sprite_s sprites[])
 {
-	struct {
-		double dist;
-		size_t index;
-	} *sorted = malloc(n_sprites * sizeof(*sorted));
 	size_t i;
+	if (n_sprites > cam->order_buf_cap) {
+		cam->order = realloc(cam->order,
+			n_sprites * sizeof(*cam->order));
+		cam->order_buf_cap = n_sprites;
+	}
 	for (i = 0; i < n_sprites; ++i) {
+		struct sprite_order *ord = &cam->order[i];
 		d3d_vec_s disp = {
 			sprites[i].pos.x - cam->pos.x,
 			sprites[i].pos.y - cam->pos.y
 		};
-		sorted[i].dist = hypot(disp.x, disp.y);
-		sorted[i].index = i;
+		ord->dist = hypot(disp.x, disp.y);
+		ord->index = i;
 	}
-	qsort(sorted, n_sprites, sizeof(*sorted), compar_sprite_order);
+	qsort(cam->order, n_sprites, sizeof(*cam->order), compar_sprite_order);
 	i = n_sprites;
 	while (i--) {
-		draw_sprite(cam, &sprites[sorted[i].index], sorted[i].dist);
+		struct sprite_order *ord = &cam->order[i];
+		draw_sprite(cam, &sprites[ord->index], ord->dist);
 	}
-	free(sorted);
 }
 
 void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
