@@ -60,7 +60,8 @@ struct d3d_board_s {
 // 'width' and 'height' and another member 'member' which is a buffer containing
 // all items in row-major organization. Parameters may be evaluated multiple
 // times. If either coordinate is outside the range, NULL is returned.
-#define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
+#define GET(grid, member, x, y) ((size_t)(x) < (grid)->width && (size_t)(y) < \
+		(grid)->height ? \
 	&(grid)->member[((size_t)(y) * (grid)->width + (size_t)(x))] : NULL)
 
 #ifndef M_PI
@@ -375,7 +376,7 @@ static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
 		sx = (double)x / width * sp->txtr->width;
 		for (size_t y = 0; y < height; ++y) {
-			long cy, sy;
+			size_t cy, sy;
 			cy = y + start_y;
 			if (cy >= cam->height) continue;
 			sy = (double)y / height * sp->txtr->height;
