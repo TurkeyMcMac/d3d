@@ -1,9 +1,9 @@
 exe = d3d-demo
 
-CC = c99
+flags = --std=c99 -Wall -Wextra -O3 $(CFLAGS)
 
 $(exe): main.c d3d.c d3d.h
-	$(CC) -O3 $(CFLAGS) -o $@ *.c -lm -lcurses
+	$(CC) $(flags) -o $@ *.c -lm -lcurses
 
 clean:
 	$(RM) $(exe)
