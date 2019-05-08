@@ -20,7 +20,7 @@ struct d3d_camera_s {
 	d3d_pixel pixels[];
 };
 
-struct d3d_board {
+struct d3d_board_s {
 	size_t width, height;
 	const d3d_block_s *blocks[];
 };

@@ -45,7 +45,7 @@ typedef struct d3d_camera_s d3d_camera;
 
 /* An object representing a location for blocks, sprites, and a camera. */
 struct d3d_board_s;
-typedef struct d3d_board d3d_board;
+typedef struct d3d_board_s d3d_board;
 
 /* A direction. The possible values are all listed below. */
 #define D3D_DNORTH 0
