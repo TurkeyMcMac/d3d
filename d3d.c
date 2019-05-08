@@ -26,7 +26,7 @@ struct d3d_board_s {
 };
 
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
-		&(grid)->member[(size_t)((y) * (grid)->width + (x))] : NULL)
+	&(grid)->member[((size_t)(y) * (grid)->width + (size_t)(x))] : NULL)
 
 #ifndef M_PI
 #	define M_PI 3.14159265358979323846
