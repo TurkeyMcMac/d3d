@@ -25,10 +25,15 @@ struct d3d_board_s {
 	const d3d_block_s *blocks[];
 };
 
+// get a pointer to a coordinate in a grid. A grid is any structure with members
+// 'width' and 'height' and another member 'member' which is a buffer containing
+// all items in row-major organization. Parameters may be evaluated multiple
+// times. If either coordinate is outside the range, NULL is returned.
 #define GET(grid, member, x, y) ((x) < (grid)->width && (y) < (grid)->height ? \
 	&(grid)->member[((size_t)(y) * (grid)->width + (size_t)(x))] : NULL)
 
 #ifndef M_PI
+	// M_PI is not always defined it seems
 #	define M_PI 3.14159265358979323846
 #endif
 
@@ -66,6 +71,8 @@ static size_t tocoord(double c, bool positive)
 	return f;
 }
 
+// Move the given coordinates in the direction given. If the direction is not
+// cardinal, nothing happens. No bounds are checked.
 static void move_dir(d3d_direction dir, size_t *x, size_t *y)
 {
 	switch(dir) {
@@ -77,6 +84,8 @@ static void move_dir(d3d_direction dir, size_t *x, size_t *y)
 	}
 }
 
+// Rotate a cardinal direction 180°. If the direction is not cardinal, it is
+// returned unmodified.
 static d3d_direction invert_dir(d3d_direction dir)
 {
 	switch(dir) {
@@ -88,6 +97,8 @@ static d3d_direction invert_dir(d3d_direction dir)
 	}
 }
 
+// All boards are initialized by being filled with this block. It is transparent
+// on all sides.
 static const d3d_block_s empty_block = {{
 	NULL,
 	NULL,
@@ -157,6 +168,9 @@ d3d_board *d3d_new_board(size_t width, size_t height)
 	return board;
 }
 
+// Move the position pos by dpos (delta position) until a wall is hit. dir is
+// set to the face of the block which was hit. If no block is hit, NULL is
+// returned.
 static const d3d_block_s *hit_wall(
 	d3d_camera *cam,
 	const d3d_board *board,
@@ -303,6 +317,7 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 	}
 }
 
+// Draw a sprite with a pre-calculated distance from the camera.
 static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
@@ -334,6 +349,7 @@ static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 	}
 }
 
+// Compare the sprite orders (see below). This is meant for qsort.
 static int compar_sprite_order(const void *a, const void *b)
 {
 	double dist_a = *(double *)a, dist_b = *(double *)b;
