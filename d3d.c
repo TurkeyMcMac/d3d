@@ -5,30 +5,54 @@
 #include <string.h>
 
 struct d3d_texture_s {
+	// Width and height in pixels
 	size_t width, height;
+	// Row-major pixels of size width * height
 	d3d_pixel pixels[];
 };
 
+// This is for drawing multiple sprites.
 struct sprite_order {
+	// The distance from the camera
 	double dist;
+	// The corresponding index into the given d3d_sprite_s list
 	size_t index;
 };
 
 struct d3d_camera_s {
+	// The position of the camera on the board
 	d3d_vec_s pos;
+	// The field of view in the x (sideways) and y (vertical) screen axes.
+	// Measured in radians.
 	d3d_vec_s fov;
+	// The direction of the camera relative to the positive x direction,
+	// increasing counterclockwise. In the range [0, 2π).
 	double facing;
+	// The width and height of the camera screen, in pixels.
 	size_t width, height;
+	// The value of an empty pixel on the screen, one whose ray hit nothing.
 	d3d_pixel empty_pixel;
+	// The last buffer used when sorting sprites, or NULL the first time.
 	struct sprite_order *order;
+	// The capacity (allocation size) of the field above.
 	size_t order_buf_cap;
+	// For each row of the screen, the tangent of the angle of that row
+	// relative to the center of the screen, in radians
+	// For example, the 0th item is tan(fov.y / 2)
 	double *tans;
+	// For each column of the screen, the distance from the camera to the
+	// first wall in that direction. This is calculated when drawing columns
+	// and is used when drawing sprites.
 	double *dists;
+	// The pixels of the screen in row-major order.
 	d3d_pixel pixels[];
 };
 
 struct d3d_board_s {
+	// The width and height of the board, in blocks
 	size_t width, height;
+	// The blocks of the boards. These are pointers to save space with many
+	// identical blocks.
 	const d3d_block_s *blocks[];
 };
 
@@ -131,6 +155,8 @@ d3d_camera *d3d_new_camera(
 	size = base_size + pixels_size + tans_size + dists_size;
 	cam = malloc(size);
 	if (!cam) return NULL;
+	// The members 'tans' and 'dists' are actually pointers to parts of the
+	// same allocation:
 	cam->tans = (void *)((char *)cam + size - dists_size - tans_size);
 	cam->dists = (void *)((char *)cam + size - dists_size);
 	cam->fov.x = fovx;
@@ -151,6 +177,7 @@ d3d_camera *d3d_new_camera(
 void d3d_free_camera(d3d_camera *cam)
 {
 	free(cam->order);
+	// 'tans' and 'dists' are freed here too:
 	free(cam);
 }
 
