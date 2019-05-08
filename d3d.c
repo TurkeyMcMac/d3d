@@ -209,7 +209,6 @@ d3d_board *d3d_new_board(size_t width, size_t height)
 // set to the face of the block which was hit. If no block is hit, NULL is
 // returned.
 static const d3d_block_s *hit_wall(
-	d3d_camera *cam,
 	const d3d_board *board,
 	d3d_vec_s *pos,
 	const d3d_vec_s *dpos,
@@ -273,7 +272,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	double angle =
 		cam->facing + cam->fov.x * (0.5 - (double)x / cam->width);
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
-	block = hit_wall(cam, board, &pos, &dpos, &face);
+	block = hit_wall(board, &pos, &dpos, &face);
 	if (!block) {
 		for (size_t y = 0; y < cam->height; ++y) {
 			*GET(cam, pixels, x, y) = cam->empty_pixel;
