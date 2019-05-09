@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Whether between calls of d3d_draw_sprites, when passed the same sprites and
+// n_sprites parameters, the sprites should be assumed to be in approximately
+// the same order. Insertion sort is used in this case to sort them rather than
+// quick sort. This optimization is used by default.
+#ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
+#	define OPTIMIZE_SAME_SPRITES 1
+#else
+#	define OPTIMIZE_SAME_SPRITES 0
+#endif
+
 struct d3d_texture_s {
 	// Width and height in pixels
 	size_t width, height;
@@ -36,6 +46,11 @@ struct d3d_camera_s {
 	struct sprite_order *order;
 	// The capacity (allocation size) of the field above.
 	size_t order_buf_cap;
+#if OPTIMIZE_SAME_SPRITES
+	// The last sprite list passed to d3d_draw_sprites. If this is the same
+	// the next time, some optimizations are enabled.
+	const d3d_sprite_s *last_sprites;
+#endif
 	// For each row of the screen, the tangent of the angle of that row
 	// relative to the center of the screen, in radians
 	// For example, the 0th item is tan(fov.y / 2)
@@ -401,21 +416,50 @@ void d3d_draw_sprites(
 	const d3d_sprite_s sprites[])
 {
 	size_t i;
-	if (n_sprites > cam->order_buf_cap) {
-		cam->order = realloc(cam->order,
-			n_sprites * sizeof(*cam->order));
-		cam->order_buf_cap = n_sprites;
+#if OPTIMIZE_SAME_SPRITES
+	if (sprites == cam->last_sprites && n_sprites == cam->order_buf_cap) {
+		// This assumes the sprites didn't move much, and are mostly
+		// sorted. Therefore, insertion sort is used.
+		for (i = 0; i < n_sprites; ++i) {
+			size_t move_to;
+			struct sprite_order ord = cam->order[i];
+			size_t s = ord.index;
+			d3d_vec_s disp = {
+				sprites[s].pos.x - cam->pos.x,
+				sprites[s].pos.y - cam->pos.y
+			};
+			ord.dist = hypot(disp.x, disp.y);
+			move_to = i;
+			for (long j = (long)i - 1; j >= 0; --j) {
+				if (cam->order[j].dist > ord.dist) {
+					cam->order[j + 1] = cam->order[j];
+					move_to = j;
+				} else {
+					break;
+				}
+			}
+			cam->order[move_to] = ord;
+		}
+	} else
+#endif
+	{
+		if (n_sprites > cam->order_buf_cap) {
+			cam->order = realloc(cam->order,
+				n_sprites * sizeof(*cam->order));
+			cam->order_buf_cap = n_sprites;
+		}
+		for (i = 0; i < n_sprites; ++i) {
+			struct sprite_order *ord = &cam->order[i];
+			d3d_vec_s disp = {
+				sprites[i].pos.x - cam->pos.x,
+				sprites[i].pos.y - cam->pos.y
+			};
+			ord->dist = hypot(disp.x, disp.y);
+			ord->index = i;
+		}
+		qsort(cam->order, n_sprites, sizeof(*cam->order),
+			compar_sprite_order);
 	}
-	for (i = 0; i < n_sprites; ++i) {
-		struct sprite_order *ord = &cam->order[i];
-		d3d_vec_s disp = {
-			sprites[i].pos.x - cam->pos.x,
-			sprites[i].pos.y - cam->pos.y
-		};
-		ord->dist = hypot(disp.x, disp.y);
-		ord->index = i;
-	}
-	qsort(cam->order, n_sprites, sizeof(*cam->order), compar_sprite_order);
 	i = n_sprites;
 	while (i--) {
 		struct sprite_order *ord = &cam->order[i];
