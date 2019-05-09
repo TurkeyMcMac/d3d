@@ -171,22 +171,28 @@ static const d3d_block_s *hit_wall(
 		d3d_vec_s tonext = {INFINITY, INFINITY};
 		d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
 		if (dpos->x < 0.0) {
+			// The ray is going west
 			tonext.x = -mod1(pos->x);
 		} else if (dpos->x > 0.0) {
+			// The ray is going east
 			ew = D3D_DEAST;
 			tonext.x = revmod1(pos->x);
 		}
 		if (dpos->y < 0.0) {
+			// The ray is going north
 			tonext.y = -mod1(pos->y);
 		} else if (dpos->y > 0.0) {
+			// They ray is going south
 			ns = D3D_DSOUTH;
 			tonext.y = revmod1(pos->y);
 		}
 		if (tonext.x / dpos->x < tonext.y / dpos->y) {
+			// The ray will hit a east/west wall first
 			*dir = ew;
 			pos->x += tonext.x;
 			pos->y += tonext.x / dpos->x * dpos->y;
 		} else {
+			// The ray will hit a north/south wall first
 			*dir = ns;
 			pos->y += tonext.y;
 			pos->x += tonext.y / dpos->y * dpos->x;
@@ -194,22 +200,25 @@ static const d3d_block_s *hit_wall(
 		x = tocoord(pos->x, dpos->x > 0.0);
 		y = tocoord(pos->y, dpos->y > 0.0);
 		blk = GET(board, blocks, x, y);
-		if (!blk) return NULL;
+		if (!blk) return NULL; // The ray left the board
 		if (!(*blk)->faces[*dir]) {
+			// The face the ray hit is empty
 			move_dir(*dir, &x, &y);
 			blk = GET(board, blocks, x, y);
-			if (!blk) return NULL;
+			if (!blk) return NULL; // The ray left the board
 			if (!(*blk)->faces[invert_dir(*dir)]) {
+				// The face the ray hit is empty
+				// Nudge the ray past the wall:
 				if (*dir == ew) {
 					pos->x += copysign(0.0001, dpos->x);
 				} else {
 					pos->y += copysign(0.0001, dpos->y);
 				}
-				*dir = -1;
+				*dir = -1; // No wall was hit this time
 			}
 		}
 		block = *blk;
-	} while (*dir == -1);
+	} while (*dir == -1); // While no wall was hit
 	return block;
 }
 
@@ -224,6 +233,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
 	block = hit_wall(board, &pos, &dpos, &face);
 	if (!block) {
+		// The ray hit no block, so fill this column with emptiness:
 		for (size_t y = 0; y < cam->height; ++y) {
 			*GET(cam, pixels, x, y) = cam->empty_pixel;
 		}
@@ -236,10 +246,15 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	for (size_t t = 0; t < cam->height; ++t) {
 		const d3d_texture *txtr;
 		size_t tx, ty;
+		// The distance the ray travelled, assuming it hit a vertical
+		// wall:
 		double dist_y = cam->tans[t] * dist + 0.5;
 		if (dist_y > 0.0 && dist_y < 1.0) {
+			// A vertical wall was indeed hit
 			double dimension;
 			txtr = block->faces[face];
+			// Choose the x coordinate of the pixel depending on
+			// wall orientation:
 			switch (face) {
 			case D3D_DSOUTH:
 				dimension = mod1(pos.x);
@@ -259,6 +274,8 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			tx = dimension * txtr->width;
 			ty = txtr->height * dist_y;
 		} else {
+			// A floor or ceiling was hit instead. The horizontal
+			// displacement is adjusted accordingly:
 			double newdist = 0.5 / fabs(cam->tans[t]);
 			d3d_vec_s newpos = {
 				cam->pos.x + disp.x / dist * newdist,
@@ -269,10 +286,12 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			const d3d_block_s *top_bot =
 				*GET(board, blocks, bx, by);
 			if (dist_y >= 1.0) {
+				// A ceiling was hit
 				txtr = top_bot->faces[D3D_DUP];
 				if (!txtr) goto no_texture;
 				tx = revmod1(newpos.x) * txtr->width;
 			} else {
+				// A floor was hit
 				txtr = top_bot->faces[D3D_DDOWN];
 				if (!txtr) goto no_texture;
 				tx = mod1(newpos.x) * txtr->width;
@@ -310,21 +329,31 @@ static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 	double angle, width, height, diff, maxdiff;
 	size_t start_x, start_y;
 	if (dist == 0.0) return;
+	// The angle of the sprite relative to the +x axis:
 	angle = atan2(disp.y, disp.x);
+	// The view width of the sprite in radians:
 	width = atan(sp->scale.x / dist) * 2;
+	// The max camera-sprite angle difference so the sprite's visible:
 	maxdiff = (cam->fov.x + width) / 2 ;
 	diff = angle_diff(cam->facing, angle);
 	if (fabs(diff) > maxdiff) return;
+	// The height of the sprite in pixels on the camera screen:
 	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
+	// The width of the sprite in pixels on the camera screen:
 	width = width / cam->fov.x * cam->width;
+	// The first x where the sprite appears on the screen:
 	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
+	// The first y where the sprite appears on the screen:
 	start_y = (cam->height - height) / 2;
 	for (size_t x = 0; x < width; ++x) {
+		// cx is the x on the camera screen; sx is the x on the sprite's
+		// texture:
 		size_t cx, sx;
 		cx = x + start_x;
 		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
 		sx = (double)x / width * sp->txtr->width;
 		for (size_t y = 0; y < height; ++y) {
+			// cy and sy correspond to cx and sx above:
 			size_t cy, sy;
 			cy = y + start_y;
 			if (cy >= cam->height) continue;
