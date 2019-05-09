@@ -2,10 +2,19 @@
 #define D3D_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
-/* A single pixel 1 byte in size, for storing whatever data you provide in a
+/* Pixels can be any integer type you want, but you must compile both your code
+ * and this library with the same D3D_PIXEL_TYPE. You can define D3D_PIXEL_TYPE
+ * as one of the integer types from stdint.h. */
+#ifndef D3D_PIXEL_TYPE
+	/* Pixels are 1 byte by default. */
+#	define D3D_PIXEL_TYPE uint8_t
+#endif
+
+/* A single numeric pixel, for storing whatever data you provide in a
  * texture. */
-typedef char d3d_pixel;
+typedef D3D_PIXEL_TYPE d3d_pixel;
 
 /* A vector in two dimensions. */
 typedef struct {
