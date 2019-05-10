@@ -334,7 +334,7 @@ static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 	// The view width of the sprite in radians:
 	width = atan(sp->scale.x / dist) * 2;
 	// The max camera-sprite angle difference so the sprite's visible:
-	maxdiff = (cam->fov.x + width) / 2 ;
+	maxdiff = (cam->fov.x + width) / 2;
 	diff = angle_diff(cam->facing, angle);
 	if (fabs(diff) > maxdiff) return;
 	// The height of the sprite in pixels on the camera screen:
