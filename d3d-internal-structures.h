@@ -6,10 +6,6 @@
 
 #include "d3d.h"
 
-// Whether between calls of d3d_draw_sprites, when passed the same sprites and
-// n_sprites parameters, the sprites should be assumed to be in approximately
-// the same order. Insertion sort is used in this case to sort them rather than
-// quick sort. This optimization is used by default.
 #ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
 #	define OPTIMIZE_SAME_SPRITES 1
 #else

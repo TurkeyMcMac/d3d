@@ -4,11 +4,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Pixels can be any integer type you want, but you must compile both your code
- * and this library with the same D3D_PIXEL_TYPE. You can define D3D_PIXEL_TYPE
- * as one of the integer types from stdint.h. */
+/* COMPILE-TIME OPTIONS:
+ * - D3D_PIXEL_TYPE: Pixels can be any integer type you want, but you MUST
+ *   compile both your code and this library with the same D3D_PIXEL_TYPE. You
+ *   can define D3D_PIXEL_TYPE as one of the integer types from stdint.h. Pixels
+ *   are uint8_t by default.
+ * - D3D_DONT_OPTIMIZE_SAME_SPRITES: Define this to disable optimization when
+ *   the same sprites are passed the d3d_draw_sprites twice in a row. In the
+ *   default case, when this happens, sprites are assumed not to move much
+ *   between frames, which can hurt performance if that is seldom true. You NEED
+ *   NOT compile the client code with this option, since the interface is the
+ *   same either way.
+ * */
+
 #ifndef D3D_PIXEL_TYPE
-	/* Pixels are 1 byte by default. */
 #	define D3D_PIXEL_TYPE uint8_t
 #endif
 
