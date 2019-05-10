@@ -14,8 +14,7 @@
  *   default case, when this happens, sprites are assumed not to move much
  *   between frames, which can hurt performance if that is seldom true. You NEED
  *   NOT compile the client code with this option, since the interface is the
- *   same either way.
- * */
+ *   same either way. */
 
 #ifndef D3D_PIXEL_TYPE
 #	define D3D_PIXEL_TYPE uint8_t
