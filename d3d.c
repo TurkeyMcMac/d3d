@@ -385,7 +385,7 @@ void d3d_draw_sprites(
 		// sorted. Therefore, insertion sort is used.
 		for (i = 0; i < n_sprites; ++i) {
 			size_t move_to;
-			struct sprite_order ord = cam->order[i];
+			struct d3d_sprite_order ord = cam->order[i];
 			size_t s = ord.index;
 			d3d_vec_s disp = {
 				sprites[s].pos.x - cam->pos.x,
@@ -412,7 +412,7 @@ void d3d_draw_sprites(
 			cam->order_buf_cap = n_sprites;
 		}
 		for (i = 0; i < n_sprites; ++i) {
-			struct sprite_order *ord = &cam->order[i];
+			struct d3d_sprite_order *ord = &cam->order[i];
 			d3d_vec_s disp = {
 				sprites[i].pos.x - cam->pos.x,
 				sprites[i].pos.y - cam->pos.y
@@ -425,7 +425,7 @@ void d3d_draw_sprites(
 	}
 	i = n_sprites;
 	while (i--) {
-		struct sprite_order *ord = &cam->order[i];
+		struct d3d_sprite_order *ord = &cam->order[i];
 		draw_sprite(cam, &sprites[ord->index], ord->dist);
 	}
 }

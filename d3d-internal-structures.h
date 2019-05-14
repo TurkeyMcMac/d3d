@@ -20,7 +20,7 @@ struct d3d_texture_s {
 };
 
 // This is for drawing multiple sprites.
-struct sprite_order {
+struct d3d_sprite_order {
 	// The distance from the camera
 	double dist;
 	// The corresponding index into the given d3d_sprite_s list
@@ -41,7 +41,7 @@ struct d3d_camera_s {
 	// The value of an empty pixel on the screen, one whose ray hit nothing.
 	d3d_pixel empty_pixel;
 	// The last buffer used when sorting sprites, or NULL the first time.
-	struct sprite_order *order;
+	struct d3d_sprite_order *order;
 	// The capacity (allocation size) of the field above.
 	size_t order_buf_cap;
 #if OPTIMIZE_SAME_SPRITES
