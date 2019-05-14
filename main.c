@@ -25,86 +25,90 @@ int term_pixel(int p)
 	return COLOR_PAIR(p - ' ') | '#';
 }
 
-#define SPRITE_SIDE 3
+#define WALL_WIDTH 4
+#define WALL_HEIGHT 4
+static const char wall_pixels[WALL_WIDTH * WALL_HEIGHT] =
+	"))))"
+	")::)"
+	")::)"
+	"))))"
+;
 
-#define SIDE 21
+
+#define BAT_WIDTH 23
+#define BAT_HEIGHT 9
+static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
+	"          ! !          "
+	"   !     !!!!!     !   "
+	"  !!!   !!O!O!!   !!!  "
+	" !!!!!!!!!!!!!!!!!!!!! "
+	"!!!!!!!!!!!!!!!!!!!!!!!"
+	"! ! ! !!!!!!!!!!! ! ! !"
+	"        !!!!!!!        "
+	"          !!!          "
+	"           !           "
+	,
+	"          ! !          "
+	"         !!!!!         "
+	"        !!O!O!!        "
+	"      !!!!!!!!!!!      "
+	"    !!!!!!!!!!!!!!!    "
+	"  !!!!!!!!!!!!!!!!!!!  "
+	" !!!!!  !!!!!!!  !!!!! "
+	"! !  !    !!!    !  ! !"
+	"           !           "
+
+};
+
+static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
+{
+	d3d_texture *txtr = d3d_new_texture(width, height);
+	memcpy(d3d_get_texture_pixels(txtr), pix, width * height);
+	return txtr;
+}
+
 int main(void)
 {
-	static const char pixels[SIDE * SIDE] =
-		"....................."
-		"....................."
-		".#.#.###.#...#...###."
-		".#.#.#...#...#...#.#."
-		".###.###.#...#...#.#."
-		".#.#.#...#...#...#.#."
-		".#.#.###.###.###.###."
-		"....................."
-		".#.#.###.#...#...###."
-		".#.#.#...#...#...#.#."
-		".###.###.#...#...#.#."
-		".#.#.#...#...#...#.#."
-		".#.#.###.###.###.###."
-		"....................."
-		".#.#.###.#...#...###."
-		".#.#.#...#...#...#.#."
-		".###.###.#...#...#.#."
-		".#.#.#...#...#...#.#."
-		".#.#.###.###.###.###."
-		"....................."
-		"....................."
-	;
-	static const char sprite_pixels[SPRITE_SIDE * SPRITE_SIDE] =
-		" @ "
-		"@@@"
-		" @ "
-	;
 	initscr();
-	d3d_texture *txtr = d3d_new_texture(SIDE, SIDE);
-	d3d_texture *sprite_txtr = d3d_new_texture(SPRITE_SIDE, SPRITE_SIDE);
-	d3d_block_s blk = {{txtr, txtr, txtr, txtr, txtr, txtr}};
+	d3d_texture *wall, *bat;
+	wall = make_texture(WALL_WIDTH, WALL_HEIGHT, wall_pixels);
+	bat = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[0]);
+	d3d_block_s walls = {{wall, wall, wall, wall, wall, wall}};
+	d3d_block_s empty = {{NULL, NULL, NULL, NULL, wall, wall}};
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
-	d3d_sprite_s sprites[2] = {
+	d3d_sprite_s bats[1] = {
 		{
-			.txtr = txtr,
-			.transparent = '.',
-			.pos = {1.2, 1.5},
-			.scale = {0.2, 0.3}
-		},
-		{
-			.txtr = sprite_txtr,
+			.txtr = bat,
 			.transparent = ' ',
 			.pos = {1.5, 1.6},
-			.scale = {0.2, 0.3}
+			.scale = {0.3, 0.2}
 		}
 	};
-	memcpy(d3d_get_texture_pixels(txtr), pixels, SIDE * SIDE);
-	memcpy(d3d_get_texture_pixels(sprite_txtr), sprite_pixels,
-		SPRITE_SIDE * SPRITE_SIDE);
 	*d3d_camera_empty_pixel(cam) = ' ';
-	*d3d_board_get(brd, 0, 0) = &blk;
-	*d3d_board_get(brd, 1, 0) = &blk;
-	*d3d_board_get(brd, 2, 0) = &blk;
-	*d3d_board_get(brd, 3, 0) = &blk;
-	*d3d_board_get(brd, 0, 1) = &blk;
-	*d3d_board_get(brd, 1, 1) = &blk;
-	*d3d_board_get(brd, 2, 1) = &blk;
-	*d3d_board_get(brd, 3, 1) = &blk;
-	*d3d_board_get(brd, 0, 2) = &blk;
-	*d3d_board_get(brd, 1, 2) = &blk;
-	*d3d_board_get(brd, 2, 2) = &blk;
-	*d3d_board_get(brd, 3, 2) = &blk;
-	*d3d_board_get(brd, 0, 3) = &blk;
-	*d3d_board_get(brd, 1, 3) = &blk;
-	*d3d_board_get(brd, 2, 3) = &blk;
-	*d3d_board_get(brd, 3, 3) = &blk;
+	*d3d_board_get(brd, 0, 0) = &walls;
+	*d3d_board_get(brd, 1, 0) = &walls;
+	*d3d_board_get(brd, 2, 0) = &walls;
+	*d3d_board_get(brd, 3, 0) = &walls;
+	*d3d_board_get(brd, 0, 1) = &walls;
+	*d3d_board_get(brd, 1, 1) = &empty;
+	*d3d_board_get(brd, 2, 1) = &empty;
+	*d3d_board_get(brd, 3, 1) = &walls;
+	*d3d_board_get(brd, 0, 2) = &walls;
+	*d3d_board_get(brd, 1, 2) = &empty;
+	*d3d_board_get(brd, 2, 2) = &empty;
+	*d3d_board_get(brd, 3, 2) = &walls;
+	*d3d_board_get(brd, 0, 3) = &walls;
+	*d3d_board_get(brd, 1, 3) = &walls;
+	*d3d_board_get(brd, 2, 3) = &walls;
+	*d3d_board_get(brd, 3, 3) = &walls;
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
-	for (;;) {
+	for (int tick = 1 ;; tick = (tick + 1) % 4) {
 		double move_angle;
 		d3d_draw_walls(cam, brd);
-		d3d_draw_sprites(cam, 2, sprites);
+		d3d_draw_sprites(cam, 1, bats);
 		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
 				int p = *d3d_camera_get(cam, x, y);
@@ -112,6 +116,18 @@ int main(void)
 			}
 		}
 		refresh();
+		switch (tick) {
+		case 0:
+			memcpy(d3d_get_texture_pixels(bat), bat_pixels[0],
+				BAT_WIDTH * BAT_HEIGHT);
+			break;
+		case 2:
+			memcpy(d3d_get_texture_pixels(bat), bat_pixels[1],
+				BAT_WIDTH * BAT_HEIGHT);
+			break;
+		default:
+			break;
+		}
 		move_angle = *d3d_camera_facing(cam);
 		switch (getch()) {
 		case 'w':
