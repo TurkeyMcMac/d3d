@@ -87,6 +87,7 @@ static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 int main(void)
 {
 	initscr();
+	timeout(10);
 	atexit(end_screen);
 	d3d_texture *wall, *bat[2];
 	wall = make_texture(WALL_WIDTH, WALL_HEIGHT, wall_pixels);
@@ -135,7 +136,7 @@ int main(void)
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
-	for (;;) {
+	for (int tick = 1 ;; tick = (tick + 1) % 10) {
 		double move_angle;
 		d3d_draw_walls(cam, brd);
 		d3d_draw_sprites(cam, N_BATS, bats);
@@ -146,27 +147,29 @@ int main(void)
 			}
 		}
 		refresh();
-		for (int i = 0; i < N_BATS; i++) {
-			bats[i].pos.x += bat_speeds[i].x;
-			if (bats[i].pos.x < WALL_START_X) {
-				bats[i].pos.x = WALL_START_X;
-				bat_speeds[i].x *= -1;
-			} else if (bats[i].pos.x > WALL_END_X) {
-				bats[i].pos.x = WALL_END_X;
-				bat_speeds[i].x *= -1;
-			}
-			bats[i].pos.y += bat_speeds[i].y;
-			if (bats[i].pos.y < WALL_START_Y) {
-				bats[i].pos.y = WALL_START_Y;
-				bat_speeds[i].y *= -1;
-			} else if (bats[i].pos.y > WALL_END_Y) {
-				bats[i].pos.y = WALL_END_Y;
-				bat_speeds[i].y *= -1;
-			}
-			if (bats[i].txtr == bat[0]) {
-				bats[i].txtr = bat[1];
-			} else {
-				bats[i].txtr = bat[0];
+		if (tick == 0) {
+			for (int i = 0; i < N_BATS; i++) {
+				bats[i].pos.x += bat_speeds[i].x;
+				if (bats[i].pos.x < WALL_START_X) {
+					bats[i].pos.x = WALL_START_X;
+					bat_speeds[i].x *= -1;
+				} else if (bats[i].pos.x > WALL_END_X) {
+					bats[i].pos.x = WALL_END_X;
+					bat_speeds[i].x *= -1;
+				}
+				bats[i].pos.y += bat_speeds[i].y;
+				if (bats[i].pos.y < WALL_START_Y) {
+					bats[i].pos.y = WALL_START_Y;
+					bat_speeds[i].y *= -1;
+				} else if (bats[i].pos.y > WALL_END_Y) {
+					bats[i].pos.y = WALL_END_Y;
+					bat_speeds[i].y *= -1;
+				}
+				if (bats[i].txtr == bat[0]) {
+					bats[i].txtr = bat[1];
+				} else {
+					bats[i].txtr = bat[0];
+				}
 			}
 		}
 		move_angle = *d3d_camera_facing(cam);
