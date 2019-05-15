@@ -16,35 +16,6 @@
 // is determined by this value.
 #define FOV_X 2.0
 
-// Initialize the colors for the screen. This must be called after initscr and
-// before term_pixel.
-void init_pairs(void)
-{
-	start_color();
-	if (COLOR_PAIRS < 64) {
-		fprintf(stderr, "libcurses must support at least 64 colors\n");
-		exit(EXIT_FAILURE);
-	}
-	for (int fg = 0; fg < 8; ++fg) {
-		for (int bg = 0; bg < 8; ++bg) {
-			init_pair((fg << 3 | bg) + 1, fg, bg);
-		}
-	}
-}
-
-// Convert a pixel from a texture into an ncurses pixel. This must be called
-// after init_pairs is called once.
-int term_pixel(int p)
-{
-	return COLOR_PAIR(p - ' ') | '#';
-}
-
-// End screen drawing mode.
-void end_screen(void)
-{
-	endwin();
-}
-
 // Where the world border starts.
 #define WALL_START_X 1.2
 #define WALL_START_Y 1.2
@@ -91,6 +62,35 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 	"           !           "
 
 };
+
+// Initialize the colors for the screen. This must be called after initscr and
+// before term_pixel.
+void init_pairs(void)
+{
+	start_color();
+	if (COLOR_PAIRS < 64) {
+		fprintf(stderr, "libcurses must support at least 64 colors\n");
+		exit(EXIT_FAILURE);
+	}
+	for (int fg = 0; fg < 8; ++fg) {
+		for (int bg = 0; bg < 8; ++bg) {
+			init_pair((fg << 3 | bg) + 1, fg, bg);
+		}
+	}
+}
+
+// Convert a pixel from a texture into an ncurses pixel. This must be called
+// after init_pairs is called once.
+int term_pixel(int p)
+{
+	return COLOR_PAIR(p - ' ') | '#';
+}
+
+// End screen drawing mode.
+void end_screen(void)
+{
+	endwin();
+}
 
 // Make a texture and fill it with the given memory of size width * height.
 static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
