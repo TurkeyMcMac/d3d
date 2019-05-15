@@ -15,7 +15,10 @@
 void init_pairs(void)
 {
 	start_color();
-	if (COLOR_PAIRS < 64) return;
+	if (COLOR_PAIRS < 64) {
+		fprintf(stderr, "libcurses must support at least 64 colors\n");
+		exit(EXIT_FAILURE);
+	}
 	for (int fg = 0; fg < 8; ++fg) {
 		for (int bg = 0; bg < 8; ++bg) {
 			init_pair((fg << 3 | bg) + 1, fg, bg);
