@@ -1,0 +1,11 @@
+This demonstration shows a use of the library. Walls and empty spaces are shown,
+along with sprites. Methods of sprite movement and animation used as well. The
+code is located in 'main.c'.
+
+To compile the demo, run `make`.
+
+This demo has a special way of translating ASCII characters to curses colors.
+The table is shown in 'color-table'. This file is valid TSV. The CHAR column is
+the ASCII character. The FORE column is the foreground color. The BACK column is
+the background color. The foreground color is displayed as the color of a the
+character '#' on the background.
