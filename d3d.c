@@ -475,6 +475,16 @@ const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y)
 	return GET(cam, pixels, x, y);
 }
 
+size_t d3d_texture_width(const d3d_texture *txtr)
+{
+	return txtr->width;
+}
+
+size_t d3d_texture_height(const d3d_texture *txtr)
+{
+	return txtr->height;
+}
+
 d3d_pixel *d3d_get_texture_pixels(d3d_texture *txtr)
 {
 	return txtr->pixels;
@@ -483,6 +493,16 @@ d3d_pixel *d3d_get_texture_pixels(d3d_texture *txtr)
 d3d_pixel *d3d_texture_get(d3d_texture *txtr, size_t x, size_t y)
 {
 	return GET(txtr, pixels, x, y);
+}
+
+size_t d3d_board_width(const d3d_board *board)
+{
+	return board->width;
+}
+
+size_t d3d_board_height(const d3d_board *board)
+{
+	return board->height;
 }
 
 const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y)

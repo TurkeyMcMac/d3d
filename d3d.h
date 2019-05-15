@@ -109,6 +109,12 @@ void d3d_free_camera(d3d_camera *cam);
 /* Allocate a new texture without its pixels initialized. */
 d3d_texture *d3d_new_texture(size_t width, size_t height);
 
+/* Get the width of the texture in pixels. */
+size_t d3d_texture_width(const d3d_texture *txtr);
+
+/* Get the height of the texture in pixels. */
+size_t d3d_texture_height(const d3d_texture *txtr);
+
 /* Return the texture's pixel buffer, the size of its width times its height.
  * The pixels can be initialized in this way. */
 d3d_pixel *d3d_get_texture_pixels(d3d_texture *txtr);
@@ -120,6 +126,12 @@ d3d_pixel *d3d_texture_get(d3d_texture *txtr, size_t x, size_t y);
 /* Create a new board with a width and height. All its blocks are initially
  * empty, transparent on all sides. */
 d3d_board *d3d_new_board(size_t width, size_t height);
+
+/* Get the width of the board in blocks. */
+size_t d3d_board_width(const d3d_board *board);
+
+/* Get the height of the board in blocks. */
+size_t d3d_board_height(const d3d_board *board);
 
 /* Get a block in a board. If the coordinates are out of range, NULL is
  * returned. Otherwise, a pointer to a block POINTER is returned. This pointed-
