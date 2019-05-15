@@ -34,6 +34,7 @@ static const char wall_pixels[WALL_WIDTH * WALL_HEIGHT] =
 	"))))"
 ;
 
+#define N_BATS 2
 
 #define BAT_WIDTH 23
 #define BAT_HEIGHT 9
@@ -70,20 +71,31 @@ static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 int main(void)
 {
 	initscr();
-	d3d_texture *wall, *bat;
+	d3d_texture *wall, *bat[2];
 	wall = make_texture(WALL_WIDTH, WALL_HEIGHT, wall_pixels);
-	bat = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[0]);
+	bat[0] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[0]);
+	bat[1] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[1]);
 	d3d_block_s walls = {{wall, wall, wall, wall, wall, wall}};
 	d3d_block_s empty = {{NULL, NULL, NULL, NULL, wall, wall}};
 	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
-	d3d_sprite_s bats[1] = {
+	d3d_sprite_s bats[N_BATS] = {
 		{
-			.txtr = bat,
+			.txtr = bat[0],
 			.transparent = ' ',
 			.pos = {1.5, 1.6},
 			.scale = {0.3, 0.2}
+		},
+		{
+			.txtr = bat[1],
+			.transparent = ' ',
+			.pos = {2.5, 2.6},
+			.scale = {0.3, 0.2}
 		}
+	};
+	d3d_vec_s bat_speeds[N_BATS] = {
+		{0.03, 0.02},
+		{0.01, -0.04}
 	};
 	*d3d_camera_empty_pixel(cam) = ' ';
 	*d3d_board_get(brd, 0, 0) = &walls;
@@ -105,10 +117,10 @@ int main(void)
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
-	for (int tick = 1 ;; tick = (tick + 1) % 4) {
+	for (;;) {
 		double move_angle;
 		d3d_draw_walls(cam, brd);
-		d3d_draw_sprites(cam, 1, bats);
+		d3d_draw_sprites(cam, N_BATS, bats);
 		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
 				int p = *d3d_camera_get(cam, x, y);
@@ -116,17 +128,28 @@ int main(void)
 			}
 		}
 		refresh();
-		switch (tick) {
-		case 0:
-			memcpy(d3d_get_texture_pixels(bat), bat_pixels[0],
-				BAT_WIDTH * BAT_HEIGHT);
-			break;
-		case 2:
-			memcpy(d3d_get_texture_pixels(bat), bat_pixels[1],
-				BAT_WIDTH * BAT_HEIGHT);
-			break;
-		default:
-			break;
+		for (int i = 0; i < N_BATS; i++) {
+			bats[i].pos.x += bat_speeds[i].x;
+			if (bats[i].pos.x < 1.2) {
+				bats[i].pos.x = 1.2;
+				bat_speeds[i].x *= -1;
+			} else if (bats[i].pos.x > 2.8) {
+				bats[i].pos.x = 2.8;
+				bat_speeds[i].x *= -1;
+			}
+			bats[i].pos.y += bat_speeds[i].y;
+			if (bats[i].pos.y < 1.2) {
+				bats[i].pos.y = 1.2;
+				bat_speeds[i].y *= -1;
+			} else if (bats[i].pos.y > 2.8) {
+				bats[i].pos.y = 2.8;
+				bat_speeds[i].y *= -1;
+			}
+			if (bats[i].txtr == bat[0]) {
+				bats[i].txtr = bat[1];
+			} else {
+				bats[i].txtr = bat[0];
+			}
 		}
 		move_angle = *d3d_camera_facing(cam);
 		switch (getch()) {
