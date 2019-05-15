@@ -211,19 +211,19 @@ int main(void)
 		switch (getch()) {
 		case 'w': // Forward
 			break;
-		case 'a': // Turn left
+		case 'a': // Left
 			move_angle += M_PI / 2;
 			break;
 		case 's': // Backward
 			move_angle += M_PI;
 			break;
-		case 'd': // Turn right
+		case 'd': // Right
 			move_angle -= M_PI / 2;
 			break;
-		case 'q': // Strafe left
+		case 'q': // Turn left
 			*d3d_camera_facing(cam) += 0.04;
 			continue;
-		case 'e': // Strafe right
+		case 'e': // Turn right
 			*d3d_camera_facing(cam) -= 0.04;
 			continue;
 		case 'x': // Quit the game
