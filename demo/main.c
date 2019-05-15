@@ -1,4 +1,4 @@
-#include "d3d.h"
+#include "../d3d.h"
 #include <curses.h>
 #include <math.h>
 #include <stdio.h>
