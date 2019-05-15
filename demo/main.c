@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #ifndef M_PI
 #	define M_PI 3.14159265358979323846
@@ -63,6 +64,32 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 
 };
 
+#ifdef _WIN32
+#	include <windows.h>
+#endif
+// Wait until the next tick with the given interval between ticks. This will try
+// to account for computing time since the last tick.
+void next_tick(int interval_ms)
+{
+// TODO: check if this is actually portable
+#if CLOCKS_PER_SEC < 1000
+	int delay_ms = interval_ms;
+#else
+	clock_t interval = CLOCKS_PER_SEC / 1000 * interval_ms;
+	clock_t clocks_left = interval - clock() % interval;
+	int delay_ms = clocks_left * 1000 / CLOCKS_PER_SEC;
+#endif
+#ifdef _WIN32
+	Sleep(delay_ms);
+#else
+	struct timespec ts = {
+		.tv_sec = 0,
+		.tv_nsec = delay_ms * 1000000
+	};
+	nanosleep(&ts, NULL);
+#endif
+}
+
 // Initialize the colors for the screen. This must be called after initscr and
 // before term_pixel.
 void init_pairs(void)
@@ -103,8 +130,8 @@ static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 int main(void)
 {
 	initscr();
-	// Maximum key delay is 10ms:
-	timeout(10);
+	// Don't wait for the user to press a key:
+	timeout(0);
 	atexit(end_screen);
 	d3d_texture *wall, *bat[2];
 	// The wall texture:
@@ -165,6 +192,7 @@ int main(void)
 	// The tick cycles to 0 before it hits 10:
 	for (int tick = 1 ;; tick = (tick + 1) % 10) {
 		double move_angle;
+		next_tick(10);
 		d3d_draw_walls(cam, brd);
 		d3d_draw_sprites(cam, N_BATS, bats);
 		// Draw the pixels on the terminal:
