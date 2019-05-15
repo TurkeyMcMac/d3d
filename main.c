@@ -25,6 +25,11 @@ int term_pixel(int p)
 	return COLOR_PAIR(p - ' ') | '#';
 }
 
+#define WALL_START_X 1.2
+#define WALL_START_Y 1.2
+#define WALL_END_X 2.8
+#define WALL_END_Y 2.8
+
 #define WALL_WIDTH 4
 #define WALL_HEIGHT 4
 static const char wall_pixels[WALL_WIDTH * WALL_HEIGHT] =
@@ -130,19 +135,19 @@ int main(void)
 		refresh();
 		for (int i = 0; i < N_BATS; i++) {
 			bats[i].pos.x += bat_speeds[i].x;
-			if (bats[i].pos.x < 1.2) {
-				bats[i].pos.x = 1.2;
+			if (bats[i].pos.x < WALL_START_X) {
+				bats[i].pos.x = WALL_START_X;
 				bat_speeds[i].x *= -1;
-			} else if (bats[i].pos.x > 2.8) {
-				bats[i].pos.x = 2.8;
+			} else if (bats[i].pos.x > WALL_END_X) {
+				bats[i].pos.x = WALL_END_X;
 				bat_speeds[i].x *= -1;
 			}
 			bats[i].pos.y += bat_speeds[i].y;
-			if (bats[i].pos.y < 1.2) {
-				bats[i].pos.y = 1.2;
+			if (bats[i].pos.y < WALL_START_Y) {
+				bats[i].pos.y = WALL_START_Y;
 				bat_speeds[i].y *= -1;
-			} else if (bats[i].pos.y > 2.8) {
-				bats[i].pos.y = 2.8;
+			} else if (bats[i].pos.y > WALL_END_Y) {
+				bats[i].pos.y = WALL_END_Y;
 				bat_speeds[i].y *= -1;
 			}
 			if (bats[i].txtr == bat[0]) {
@@ -175,8 +180,17 @@ int main(void)
 		default:
 			continue;
 		}
-		d3d_camera_position(cam)->x += cos(move_angle) * 0.04;
-		d3d_camera_position(cam)->y += sin(move_angle) * 0.04;
+		d3d_vec_s *cam_pos = d3d_camera_position(cam);
+		cam_pos->x += cos(move_angle) * 0.04;
+		if (cam_pos->x < WALL_START_X)
+			cam_pos->x = WALL_START_X;
+		else if (cam_pos->x > WALL_END_X)
+			cam_pos->x = WALL_END_X;
+		cam_pos->y += sin(move_angle) * 0.04;
+		if (cam_pos->y < WALL_START_Y)
+			cam_pos->y = WALL_START_Y;
+		else if (cam_pos->y > WALL_END_Y)
+			cam_pos->y = WALL_END_Y;
 	}
 end:
 	endwin();
