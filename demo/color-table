@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+#
+# Usage: ./color-table
+#
+# Print out the characters which correspond to the foreground and background
+# colors on the same line as used in this demonstration of the library. (The
+# output is a human-readable table.)
+
+my @colors = qw(black red green yellow blue magenta cyan white);
+print "CHAR\tFORE\tBACK\n";
+foreach my $fg (0..7) {
+	foreach my $bg (0..7) {
+		printf "%c\t%s\t%s\n",
+			($fg << 3 | $bg) + 0x21, @colors[$fg], @colors[$bg];
+	}
+}
