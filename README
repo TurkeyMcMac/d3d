@@ -9,5 +9,4 @@ This is a 3D ray casting graphics library meant to draw dungeons and other
 square maze-like structures. It is intended for use with libcurses-based
 graphics, but it can be easily integrated with another drawing system.
 
-Documentation is in d3d.h. The demo is currently in main.c. I will hopefully get
-a better, more readable demo working in the future.
+Documentation is in d3d.h. The demo is under the 'demo' directory.
