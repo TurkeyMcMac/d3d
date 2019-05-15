@@ -163,7 +163,7 @@ int main(void)
 			.scale = {0.3, 0.15}
 		}
 	};
-	// Velocities of the corresponding bats (in blocks per 10 ticks):
+	// Velocities of the corresponding bats (in blocks per 20 ticks):
 	d3d_vec_s bat_speeds[N_BATS] = {
 		{0.03, 0.02},
 		{0.01, -0.04}
@@ -189,8 +189,8 @@ int main(void)
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
-	// The tick cycles to 0 before it hits 10:
-	for (int tick = 1 ;; tick = (tick + 1) % 10) {
+	// The tick cycles to 0 before it hits 20:
+	for (int tick = 1 ;; tick = (tick + 1) % 20) {
 		double move_angle;
 		next_tick(10);
 		d3d_draw_walls(cam, brd);
