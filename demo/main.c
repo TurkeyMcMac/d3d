@@ -8,6 +8,9 @@
 #	define M_PI 3.14159265358979323846
 #endif
 
+#define PIXEL_ASPECT 1.8
+#define FOV_X 2.0
+
 void init_pairs(void)
 {
 	start_color();
@@ -82,20 +85,21 @@ int main(void)
 	bat[1] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[1]);
 	d3d_block_s walls = {{wall, wall, wall, wall, wall, wall}};
 	d3d_block_s empty = {{NULL, NULL, NULL, NULL, wall, wall}};
-	d3d_camera *cam = d3d_new_camera(2.0, 2.0, COLS, LINES);
+	d3d_camera *cam = d3d_new_camera(FOV_X,
+		PIXEL_ASPECT * LINES * FOV_X / COLS, COLS, LINES);
 	d3d_board *brd = d3d_new_board(4, 4);
 	d3d_sprite_s bats[N_BATS] = {
 		{
 			.txtr = bat[0],
 			.transparent = ' ',
 			.pos = {1.5, 1.6},
-			.scale = {0.3, 0.2}
+			.scale = {0.3, 0.15}
 		},
 		{
 			.txtr = bat[1],
 			.transparent = ' ',
 			.pos = {2.5, 2.6},
-			.scale = {0.3, 0.2}
+			.scale = {0.3, 0.15}
 		}
 	};
 	d3d_vec_s bat_speeds[N_BATS] = {
