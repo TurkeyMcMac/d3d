@@ -9,9 +9,15 @@
 #	define M_PI 3.14159265358979323846
 #endif
 
+// The width:height ratio of a single pixel on the terminal. This may need
+// manual changing.
 #define PIXEL_ASPECT 0.625
+// The field-of-view in the x direction in radians. The FOV in the y direction
+// is determined by this value.
 #define FOV_X 2.0
 
+// Initialize the colors for the screen. This must be called after initscr and
+// before term_pixel.
 void init_pairs(void)
 {
 	start_color();
@@ -26,21 +32,28 @@ void init_pairs(void)
 	}
 }
 
+// Convert a pixel from a texture into an ncurses pixel. This must be called
+// after init_pairs is called once.
 int term_pixel(int p)
 {
 	return COLOR_PAIR(p - ' ') | '#';
 }
 
+// End screen drawing mode.
 void end_screen(void)
 {
 	endwin();
 }
 
+// Where the world border starts.
 #define WALL_START_X 1.2
 #define WALL_START_Y 1.2
+
+// Where the world border ends.
 #define WALL_END_X 2.8
 #define WALL_END_Y 2.8
 
+// The wall texture data.
 #define WALL_WIDTH 4
 #define WALL_HEIGHT 4
 static const char wall_pixels[WALL_WIDTH * WALL_HEIGHT] =
@@ -50,8 +63,10 @@ static const char wall_pixels[WALL_WIDTH * WALL_HEIGHT] =
 	"))))"
 ;
 
+// The number of bat entities
 #define N_BATS 2
 
+// The bat texture data. There are two frames.
 #define BAT_WIDTH 23
 #define BAT_HEIGHT 9
 static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
@@ -77,6 +92,7 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 
 };
 
+// Make a texture and fill it with the given memory of size width * height.
 static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 {
 	d3d_texture *txtr = d3d_new_texture(width, height);
@@ -87,17 +103,25 @@ static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 int main(void)
 {
 	initscr();
+	// Maximum key delay is 10ms:
 	timeout(10);
 	atexit(end_screen);
 	d3d_texture *wall, *bat[2];
+	// The wall texture:
 	wall = make_texture(WALL_WIDTH, WALL_HEIGHT, wall_pixels);
+	// The bat textures:
 	bat[0] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[0]);
 	bat[1] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[1]);
+	// A block containing all walls:
 	d3d_block_s walls = {{wall, wall, wall, wall, wall, wall}};
+	// A block containing just the ceiling and floor:
 	d3d_block_s empty = {{NULL, NULL, NULL, NULL, wall, wall}};
+	// The camera:
 	d3d_camera *cam = d3d_new_camera(FOV_X,
 		LINES * FOV_X / COLS / PIXEL_ASPECT, COLS, LINES);
+	// The world:
 	d3d_board *brd = d3d_new_board(4, 4);
+	// Bat sprites:
 	d3d_sprite_s bats[N_BATS] = {
 		{
 			.txtr = bat[0],
@@ -112,11 +136,13 @@ int main(void)
 			.scale = {0.3, 0.15}
 		}
 	};
+	// Velocities of the corresponding bats (in blocks per 10 ticks):
 	d3d_vec_s bat_speeds[N_BATS] = {
 		{0.03, 0.02},
 		{0.01, -0.04}
 	};
 	*d3d_camera_empty_pixel(cam) = ' ';
+	// Make a cavity in the world center:
 	*d3d_board_get(brd, 0, 0) = &walls;
 	*d3d_board_get(brd, 1, 0) = &walls;
 	*d3d_board_get(brd, 2, 0) = &walls;
@@ -136,10 +162,12 @@ int main(void)
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
+	// The tick cycles to 0 before it hits 10:
 	for (int tick = 1 ;; tick = (tick + 1) % 10) {
 		double move_angle;
 		d3d_draw_walls(cam, brd);
 		d3d_draw_sprites(cam, N_BATS, bats);
+		// Draw the pixels on the terminal:
 		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
 				int p = *d3d_camera_get(cam, x, y);
@@ -148,8 +176,11 @@ int main(void)
 		}
 		refresh();
 		if (tick == 0) {
+			// Update bats:
 			for (int i = 0; i < N_BATS; i++) {
+				// Move in the x direction:
 				bats[i].pos.x += bat_speeds[i].x;
+				// Possible bounce in the x direction:
 				if (bats[i].pos.x < WALL_START_X) {
 					bats[i].pos.x = WALL_START_X;
 					bat_speeds[i].x *= -1;
@@ -157,7 +188,9 @@ int main(void)
 					bats[i].pos.x = WALL_END_X;
 					bat_speeds[i].x *= -1;
 				}
+				// Move in the y direction:
 				bats[i].pos.y += bat_speeds[i].y;
+				// Possible bounce in the y direction:
 				if (bats[i].pos.y < WALL_START_Y) {
 					bats[i].pos.y = WALL_START_Y;
 					bat_speeds[i].y *= -1;
@@ -165,6 +198,7 @@ int main(void)
 					bats[i].pos.y = WALL_END_Y;
 					bat_speeds[i].y *= -1;
 				}
+				// Flap the wings of the bat:
 				if (bats[i].txtr == bat[0]) {
 					bats[i].txtr = bat[1];
 				} else {
@@ -172,37 +206,43 @@ int main(void)
 				}
 			}
 		}
+		// The straight-forward player movement angle:
 		move_angle = *d3d_camera_facing(cam);
 		switch (getch()) {
-		case 'w':
+		case 'w': // Forward
 			break;
-		case 'a':
+		case 'a': // Turn left
 			move_angle += M_PI / 2;
 			break;
-		case 's':
+		case 's': // Backward
 			move_angle += M_PI;
 			break;
-		case 'd':
+		case 'd': // Turn right
 			move_angle -= M_PI / 2;
 			break;
-		case 'q':
+		case 'q': // Strafe left
 			*d3d_camera_facing(cam) += 0.04;
 			continue;
-		case 'e':
+		case 'e': // Strafe right
 			*d3d_camera_facing(cam) -= 0.04;
 			continue;
-		case 'x':
+		case 'x': // Quit the game
 			exit(0);
-		default:
+		default: // Other keys are ignored
 			continue;
 		}
+		// The position of the camera:
 		d3d_vec_s *cam_pos = d3d_camera_position(cam);
+		// Move in the move angle in the x direction:
 		cam_pos->x += cos(move_angle) * 0.04;
+		// Possibly hit the wall in the x direction:
 		if (cam_pos->x < WALL_START_X)
 			cam_pos->x = WALL_START_X;
 		else if (cam_pos->x > WALL_END_X)
 			cam_pos->x = WALL_END_X;
+		// Move in the move angle in the y direction:
 		cam_pos->y += sin(move_angle) * 0.04;
+		// Possibly hit the wall in the y direction:
 		if (cam_pos->y < WALL_START_Y)
 			cam_pos->y = WALL_START_Y;
 		else if (cam_pos->y > WALL_END_Y)
