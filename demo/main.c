@@ -2,6 +2,7 @@
 #include <curses.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifndef M_PI
@@ -22,10 +23,14 @@ void init_pairs(void)
 	}
 }
 
-
 int term_pixel(int p)
 {
 	return COLOR_PAIR(p - ' ') | '#';
+}
+
+void end_screen(void)
+{
+	endwin();
 }
 
 #define WALL_START_X 1.2
@@ -79,6 +84,7 @@ static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 int main(void)
 {
 	initscr();
+	atexit(end_screen);
 	d3d_texture *wall, *bat[2];
 	wall = make_texture(WALL_WIDTH, WALL_HEIGHT, wall_pixels);
 	bat[0] = make_texture(BAT_WIDTH, BAT_HEIGHT, bat_pixels[0]);
@@ -180,7 +186,7 @@ int main(void)
 			*d3d_camera_facing(cam) -= 0.04;
 			continue;
 		case 'x':
-			goto end;
+			exit(0);
 		default:
 			continue;
 		}
@@ -196,6 +202,4 @@ int main(void)
 		else if (cam_pos->y > WALL_END_Y)
 			cam_pos->y = WALL_END_Y;
 	}
-end:
-	endwin();
 }
