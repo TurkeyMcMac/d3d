@@ -407,9 +407,18 @@ void d3d_draw_sprites(
 #endif
 	{
 		if (n_sprites > cam->order_buf_cap) {
-			cam->order = realloc(cam->order,
+			struct d3d_sprite_order *new_order = realloc(cam->order,
 				n_sprites * sizeof(*cam->order));
-			cam->order_buf_cap = n_sprites;
+			if (new_order) {
+				cam->order = new_order;
+				cam->order_buf_cap = n_sprites;
+			} else {
+				// XXX Silently truncate the list of sprites
+				// drawn. This may be a bad decision, but
+				// failure is unlikely and this shouldn't break
+				// any client code.
+				n_sprites = cam->order_buf_cap;
+			}
 		}
 		for (i = 0; i < n_sprites; ++i) {
 			struct d3d_sprite_order *ord = &cam->order[i];
