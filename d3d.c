@@ -217,11 +217,12 @@ static const d3d_block_s *hit_wall(
 				} else {
 					pos->y += copysign(0.0001, dpos->y);
 				}
-				*dir = -1; // No wall was hit this time
+				// No wall was hit this time; UP indicates that:
+				*dir = D3D_DUP;
 			}
 		}
 		block = *blk;
-	} while (*dir == -1); // While no wall was hit
+	} while (*dir == D3D_DUP); // While no wall was hit (UP indicates this.)
 	return block;
 }
 

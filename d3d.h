@@ -66,13 +66,14 @@ struct d3d_board_s;
 typedef struct d3d_board_s d3d_board;
 
 /* A direction. The possible values are all listed below. */
-#define D3D_DNORTH 0
-#define D3D_DSOUTH 1
-#define D3D_DWEST  2
-#define D3D_DEAST  3
-#define D3D_DUP    4
-#define D3D_DDOWN  5
-typedef int d3d_direction;
+typedef enum {
+	D3D_DNORTH,
+	D3D_DSOUTH,
+	D3D_DWEST,
+	D3D_DEAST,
+	D3D_DUP,
+	D3D_DDOWN
+} d3d_direction;
 
 /* Allocate a new camera with given field of view in the x and y directions (in
  * radians) and a given view width and height in pixels. */
