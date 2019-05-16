@@ -116,6 +116,9 @@ d3d_camera *d3d_new_camera(
 	cam->empty_pixel = 0;
 	cam->order = NULL;
 	cam->order_buf_cap = 0;
+#if OPTIMIZE_SAME_SPRITES
+	cam->last_sprites = NULL;
+#endif
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
