@@ -73,27 +73,26 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 #	include <windows.h>
 #endif
 // Wait until the next tick with the given interval between ticks. This will try
-// to account for computing time since the last tick.
-void next_tick(int interval_ms)
+// to account for computing time since the last tick. The argument 'ticks' is an
+// internally used counter initially set to -1.
+void next_tick(clock_t *ticks, clock_t interval)
 {
 	// TODO: check if this is actually portable
-	double delay;
-	if (CLOCKS_PER_SEC >= 1000) {
-		clock_t interval = CLOCKS_PER_SEC / 1000 * interval_ms;
-		clock_t clocks_left = interval - clock() % interval;
-		delay = (double)clocks_left / CLOCKS_PER_SEC;
-	} else {
-		delay = (double)interval_ms / 1000;
-	}
+	if (*ticks != (clock_t)-1) {
+		clock_t now = clock();
+		if (now > *ticks + interval) return;
+		clock_t delay = interval - (now - *ticks);
 #ifdef _WIN32
-	Sleep(delay * 1000);
+		Sleep(delay * 1000 / CLOCKS_PER_SEC);
 #else
-	struct timespec ts = {
-		.tv_sec = 0,
-		.tv_nsec = delay * 1e9
-	};
-	nanosleep(&ts, NULL);
+		struct timespec ts = {
+			.tv_sec = 0,
+			.tv_nsec = delay * 1000000000 / CLOCKS_PER_SEC
+		};
+		nanosleep(&ts, NULL);
 #endif
+	}
+	*ticks = clock();
 }
 
 // Initialize the colors for the screen. This must be called after initscr and
@@ -195,21 +194,31 @@ int main(void)
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
+	bool screen_refresh = true;
+	clock_t ticks = -1;
 	// The tick cycles to 0 before it hits 20:
-	for (int tick = 1 ;; tick = (tick + 1) % 20) {
+	for (int bat_state = 1 ;; bat_state = (bat_state + 1) % 20) {
 		double move_angle;
-		next_tick(10);
-		d3d_draw_walls(cam, brd);
-		d3d_draw_sprites(cam, N_BATS, bats);
-		// Draw the pixels on the terminal:
-		for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
-			for (size_t x = 0; x < d3d_camera_width(cam); ++x) {
-				int p = *d3d_camera_get(cam, x, y);
-				mvaddch(y, x, p <= ' ' ? ' ' : term_pixel(p));
+		next_tick(&ticks, CLOCKS_PER_SEC / 100);
+		if (screen_refresh) {
+			d3d_draw_walls(cam, brd);
+			d3d_draw_sprites(cam, N_BATS, bats);
+			// Draw the pixels on the terminal:
+			for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
+				for (size_t x = 0;
+				     x < d3d_camera_width(cam);
+				     ++x)
+				{
+					int p = *d3d_camera_get(cam, x, y);
+					mvaddch(y, x, p <= ' '
+						? ' '
+						: term_pixel(p));
+				}
 			}
+			refresh();
+			screen_refresh = false;
 		}
-		refresh();
-		if (tick == 0) {
+		if (bat_state == 0) {
 			// Update bats:
 			for (int i = 0; i < N_BATS; i++) {
 				// Move in the x direction:
@@ -239,6 +248,7 @@ int main(void)
 					bats[i].txtr = bat[0];
 				}
 			}
+			screen_refresh = true;
 		}
 		// The straight-forward player movement angle:
 		move_angle = *d3d_camera_facing(cam);
@@ -256,9 +266,11 @@ int main(void)
 			break;
 		case 'q': // Turn left
 			*d3d_camera_facing(cam) += 0.04;
+			screen_refresh = true;
 			continue;
 		case 'e': // Turn right
 			*d3d_camera_facing(cam) -= 0.04;
+			screen_refresh = true;
 			continue;
 		case 'x': // Quit the game
 			exit(0);
@@ -281,5 +293,6 @@ int main(void)
 			cam_pos->y = WALL_START_Y;
 		else if (cam_pos->y > WALL_END_Y)
 			cam_pos->y = WALL_END_Y;
+		screen_refresh = true;
 	}
 }
