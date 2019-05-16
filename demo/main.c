@@ -1,3 +1,8 @@
+#ifndef _WIN32
+	// For nanosleep and struct timespec
+#	define _POSIX_C_SOURCE 200809L
+#endif
+
 #include "../d3d.h"
 #include <curses.h>
 #include <math.h>
