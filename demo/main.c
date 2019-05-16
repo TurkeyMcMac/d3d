@@ -76,20 +76,21 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 // to account for computing time since the last tick.
 void next_tick(int interval_ms)
 {
-// TODO: check if this is actually portable
-#if CLOCKS_PER_SEC < 1000
-	int delay_ms = interval_ms;
-#else
-	clock_t interval = CLOCKS_PER_SEC / 1000 * interval_ms;
-	clock_t clocks_left = interval - clock() % interval;
-	int delay_ms = clocks_left * 1000 / CLOCKS_PER_SEC;
-#endif
+	// TODO: check if this is actually portable
+	double delay;
+	if (CLOCKS_PER_SEC >= 1000) {
+		clock_t interval = CLOCKS_PER_SEC / 1000 * interval_ms;
+		clock_t clocks_left = interval - clock() % interval;
+		delay = (double)clocks_left / CLOCKS_PER_SEC;
+	} else {
+		delay = (double)interval_ms / 1000;
+	}
 #ifdef _WIN32
-	Sleep(delay_ms);
+	Sleep(delay * 1000);
 #else
 	struct timespec ts = {
 		.tv_sec = 0,
-		.tv_nsec = delay_ms * 1000000
+		.tv_nsec = delay * 1e9
 	};
 	nanosleep(&ts, NULL);
 #endif
