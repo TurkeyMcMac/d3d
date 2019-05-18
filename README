@@ -10,3 +10,7 @@ square maze-like structures. It is intended for use with libcurses-based
 graphics, but it can be easily integrated with another drawing system.
 
 Documentation is in d3d.h. The demo is under the 'demo' directory.
+
+This library depends only on the standard library and the standard math library
+(compile/link it with -lm.) The demo depends on libcurses for actually drawing
+the pixels.
