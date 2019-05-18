@@ -18,6 +18,10 @@
 #	define M_PI 3.14159265358979323846
 #endif
 
+void *(*d3d_malloc)(size_t) = malloc;
+void *(*d3d_realloc)(void *, size_t) = realloc;
+void (*d3d_free)(void *) = free;
+
 // Computes fmod(n, 1.0) if n >= 0, or 1.0 + fmod(n, 1.0) if n < 0
 // Returns in the range [0, 1)
 static double mod1(double n)
@@ -103,7 +107,7 @@ d3d_camera *d3d_new_camera(
 	tans_size = height * sizeof(double);
 	dists_size = width * sizeof(double);
 	size = base_size + pixels_size + tans_size + dists_size;
-	cam = malloc(size);
+	cam = d3d_malloc(size);
 	if (!cam) return NULL;
 	// The members 'tans' and 'dists' are actually pointers to parts of the
 	// same allocation:
@@ -129,15 +133,16 @@ d3d_camera *d3d_new_camera(
 
 void d3d_free_camera(d3d_camera *cam)
 {
-	free(cam->order);
+	d3d_free(cam->order);
 	// 'tans' and 'dists' are freed here too:
-	free(cam);
+	d3d_free(cam);
 }
 
 d3d_texture *d3d_new_texture(size_t width, size_t height)
 {
 	size_t pixels_size = width * height * sizeof(d3d_pixel *);
-	d3d_texture *txtr = malloc(offsetof(d3d_texture, pixels) + pixels_size);
+	d3d_texture *txtr =
+		d3d_malloc(offsetof(d3d_texture, pixels) + pixels_size);
 	if (!txtr) return NULL;
 	txtr->width = width;
 	txtr->height = height;
@@ -148,7 +153,8 @@ d3d_texture *d3d_new_texture(size_t width, size_t height)
 d3d_board *d3d_new_board(size_t width, size_t height)
 {
 	size_t blocks_size = width * height * sizeof(d3d_block_s *);
-	d3d_board *board = malloc(offsetof(d3d_board, blocks) + blocks_size);
+	d3d_board *board =
+		d3d_malloc(offsetof(d3d_board, blocks) + blocks_size);
 	if (!board) return NULL;
 	board->width = width;
 	board->height = height;
@@ -411,8 +417,8 @@ void d3d_draw_sprites(
 #endif
 	{
 		if (n_sprites > cam->order_buf_cap) {
-			struct d3d_sprite_order *new_order = realloc(cam->order,
-				n_sprites * sizeof(*cam->order));
+			struct d3d_sprite_order *new_order = d3d_realloc(
+				cam->order, n_sprites * sizeof(*cam->order));
 			if (new_order) {
 				cam->order = new_order;
 				cam->order_buf_cap = n_sprites;

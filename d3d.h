@@ -10,6 +10,12 @@
  *    compile both your code and this library with the same D3D_PIXEL_TYPE. You
  *    can define D3D_PIXEL_TYPE as one of the integer types from stdint.h.
  *    Pixels are uint8_t by default.
+ *  - D3D_UNINITIALIZED_ALLOCATOR: Don't automatically initialize d3d_malloc,
+ *    d3d_realloc, and d3d_realloc to the standard library equivalents. If this
+ *    symbol is defined, the library user must set the variables themselves
+ *    before calling other functions. You NEED NOT compile the client code as
+ *    well with this option, although you may need to change your client code
+ *    depending on whether this option is set.
  *  - D3D_DONT_OPTIMIZE_SAME_SPRITES: Define this to disable optimization when
  *    the same sprites are passed the d3d_draw_sprites twice in a row. In the
  *    default case, when this happens, sprites are assumed not to move much
@@ -20,6 +26,14 @@
 #ifndef D3D_PIXEL_TYPE
 #	define D3D_PIXEL_TYPE uint8_t
 #endif
+
+/* Custom allocator routines. These have the same contract of behaviour as the
+ * corresponding functions in the standard library. If the preprocessor symbol
+ * D3D_UNINITIALIZED_ALLOCATOR is not defined, these are automatically set to
+ * the corresponding standard library functions. */
+extern void *(*d3d_malloc)(size_t);
+extern void *(*d3d_realloc)(void *, size_t);
+extern void (*d3d_free)(void *);
 
 /* A single numeric pixel, for storing whatever data you provide in a
  * texture. */
