@@ -45,4 +45,23 @@ void tick(struct ticker *tkr)
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &tkr->last_tick, NULL);
 }
 
-#endif /* defined(TICKER_WITH_CLOCK) */
+#elif defined(_WIN32)
+
+
+void ticker_init(struct ticker *tkr, long interval)
+{
+	tkr->last_tick = GetTickCount();
+	tkr->interval = interval;
+}
+
+void tick(struct ticker *tkr)
+{
+	DWORD now = GetTickCount();
+	DWORD deadline = tkr->last_tick + tkr->interval;
+	if (now < deadline) {
+		Sleep(deadline - now;
+	}
+	tkr->last_tick = deadline;
+}
+
+#endif /* defined(_WIN32) */

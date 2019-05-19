@@ -17,6 +17,13 @@ struct ticker {
 	struct timespec last_tick;
 	long interval;
 };
+#elif defined(_WIN32)
+#	include <windows.h>
+
+struct ticker {
+	DWORD last_tick;
+	DWORD interval;
+};
 #else
 #	error Unsupported OS
 #endif
