@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L
 #include "ticker.h"
 #include "../d3d.h"
 #include <curses.h>
