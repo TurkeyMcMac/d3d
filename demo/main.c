@@ -1,8 +1,16 @@
+#ifndef N_PTHREADS
+#	define N_PTHREADS 0
+#endif
+#define USE_PTHREADS (N_PTHREADS > 0)
+
 #ifdef _WIN32
 #	include <windows.h>
 #else
 	// For nanosleep and struct timespec
 #	define _POSIX_C_SOURCE 200809L
+#endif
+#if USE_PTHREADS
+#	include "pthread-workers.h"
 #endif
 #include "../d3d.h"
 #include <curses.h>
@@ -70,9 +78,6 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 
 };
 
-#ifdef _WIN32
-#	include <windows.h>
-#endif
 // Wait until the next tick with the given interval between ticks. This will try
 // to account for computing time since the last tick. The argument 'ticks' is an
 // internally used counter initially set to -1.
@@ -201,6 +206,10 @@ int main(void)
 	*d3d_board_get(brd, 3, 3) = &walls;
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
+#if USE_PTHREADS
+	init_threads(cam, brd);
+	atexit(destroy_threads);
+#endif
 	init_pairs();
 	bool screen_refresh = true;
 	clock_t ticks = -1;
@@ -209,7 +218,11 @@ int main(void)
 		double move_angle;
 		next_tick(&ticks, CLOCKS_PER_SEC / 100);
 		if (screen_refresh) {
+#if USE_PTHREADS
+			wait_for_frame();
+#else
 			d3d_draw_walls(cam, brd);
+#endif
 			d3d_draw_sprites(cam, N_BATS, bats);
 			// Draw the pixels on the terminal:
 			for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
@@ -223,6 +236,9 @@ int main(void)
 						: term_pixel(p));
 				}
 			}
+#if USE_PTHREADS
+			start_next_frame();
+#endif
 			refresh();
 			screen_refresh = false;
 		}
