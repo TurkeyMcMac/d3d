@@ -339,7 +339,7 @@ static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
 {
 	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
 	double angle, width, height, diff, maxdiff;
-	size_t start_x, start_y;
+	long start_x, start_y;
 	if (dist == 0.0) return;
 	// The angle of the sprite relative to the +x axis:
 	angle = atan2(disp.y, disp.x);
