@@ -11,7 +11,7 @@
 // times. If either coordinate is outside the range, NULL is returned.
 #define GET(grid, member, x, y) ((size_t)(x) < (grid)->width && (size_t)(y) < \
 		(grid)->height ? \
-	&(grid)->member[((size_t)(y) * (grid)->width + (size_t)(x))] : NULL)
+	&(grid)->member[((size_t)(y) + (grid)->height * (size_t)(x))] : NULL)
 
 #ifndef M_PI
 	// M_PI is not always defined it seems

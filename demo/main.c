@@ -129,7 +129,13 @@ void end_screen(void)
 static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 {
 	d3d_texture *txtr = d3d_new_texture(width, height);
-	memcpy(d3d_get_texture_pixels(txtr), pix, width * height);
+	size_t i = 0;
+	for (size_t y = 0; y < height; ++y) {
+		for (size_t x = 0; x < width; ++x) {
+			*d3d_texture_get(txtr, x, y) = pix[i];
+			++i;
+		}
+	}
 	return txtr;
 }
 

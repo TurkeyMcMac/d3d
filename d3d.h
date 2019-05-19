@@ -131,7 +131,8 @@ size_t d3d_texture_width(const d3d_texture *txtr);
 size_t d3d_texture_height(const d3d_texture *txtr);
 
 /* Return the texture's pixel buffer, the size of its width times its height.
- * The pixels can be initialized in this way. */
+ * The pixels can be initialized in this way. Columns are contiguous, not rows.
+ */
 d3d_pixel *d3d_get_texture_pixels(d3d_texture *txtr);
 
 /* Get a pixel at a coordinate on a texture. NULL is returned if the coordinates
