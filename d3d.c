@@ -18,9 +18,11 @@
 #	define M_PI 3.14159265358979323846
 #endif
 
+#ifndef D3D_UNINITIALIZED_ALLOCATOR
 void *(*d3d_malloc)(size_t) = malloc;
 void *(*d3d_realloc)(void *, size_t) = realloc;
 void (*d3d_free)(void *) = free;
+#endif
 
 // Computes fmod(n, 1.0) if n >= 0, or 1.0 + fmod(n, 1.0) if n < 0
 // Returns in the range [0, 1)
