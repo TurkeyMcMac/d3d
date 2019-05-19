@@ -81,7 +81,7 @@ void next_tick(clock_t *ticks, clock_t interval)
 	// TODO: check if this is actually portable
 	if (*ticks != (clock_t)-1) {
 		clock_t now = clock();
-		if (now > *ticks + interval) return;
+		if (now > *ticks + interval) goto end;
 		clock_t delay = interval - (now - *ticks);
 #ifdef _WIN32
 		Sleep(delay * 1000 / CLOCKS_PER_SEC);
@@ -93,6 +93,7 @@ void next_tick(clock_t *ticks, clock_t interval)
 		nanosleep(&ts, NULL);
 #endif
 	}
+end:
 	*ticks = clock();
 }
 
