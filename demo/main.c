@@ -1,16 +1,10 @@
-#ifdef _WIN32
-#	include <windows.h>
-#else
-	// For nanosleep and struct timespec
-#	define _POSIX_C_SOURCE 200809L
-#endif
+#include "ticker.h"
 #include "../d3d.h"
 #include <curses.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #ifndef M_PI
 #	define M_PI 3.14159265358979323846
@@ -69,33 +63,6 @@ static const char bat_pixels[2][BAT_WIDTH * BAT_HEIGHT] = {
 	"           !           "
 
 };
-
-#ifdef _WIN32
-#	include <windows.h>
-#endif
-// Wait until the next tick with the given interval between ticks. This will try
-// to account for computing time since the last tick. The argument 'ticks' is an
-// internally used counter initially set to -1.
-void next_tick(clock_t *ticks, clock_t interval)
-{
-	// TODO: check if this is actually portable
-	if (*ticks != (clock_t)-1) {
-		clock_t now = clock();
-		if (now > *ticks + interval) goto end;
-		clock_t delay = interval - (now - *ticks);
-#ifdef _WIN32
-		Sleep(delay * 1000 / CLOCKS_PER_SEC);
-#else
-		struct timespec ts = {
-			.tv_sec = 0,
-			.tv_nsec = delay * 1000000000 / CLOCKS_PER_SEC
-		};
-		nanosleep(&ts, NULL);
-#endif
-	}
-end:
-	*ticks = clock();
-}
 
 // Initialize the colors for the screen. This must be called after initscr and
 // before term_pixel.
@@ -203,11 +170,12 @@ int main(void)
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
 	bool screen_refresh = true;
-	clock_t ticks = -1;
+	struct ticker tkr;
+	ticker_init(&tkr, 10);
 	// The bat state cycles to 0 before it hits 20:
 	for (int bat_state = 1 ;; bat_state = (bat_state + 1) % 20) {
 		double move_angle;
-		next_tick(&ticks, CLOCKS_PER_SEC / 100);
+		tick(&tkr);
 		if (screen_refresh) {
 			d3d_draw_walls(cam, brd);
 			d3d_draw_sprites(cam, N_BATS, bats);
