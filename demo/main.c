@@ -204,7 +204,7 @@ int main(void)
 	init_pairs();
 	bool screen_refresh = true;
 	clock_t ticks = -1;
-	// The tick cycles to 0 before it hits 20:
+	// The bat state cycles to 0 before it hits 20:
 	for (int bat_state = 1 ;; bat_state = (bat_state + 1) % 20) {
 		double move_angle;
 		next_tick(&ticks, CLOCKS_PER_SEC / 100);
