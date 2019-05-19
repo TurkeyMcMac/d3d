@@ -9,7 +9,7 @@ struct ticker {
 	uint64_t last_tick;
 	uint64_t interval;
 };
-#elif defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+#elif __unix__
 #	define TICKER_WITH_CLOCK
 #	include <time.h>
 
