@@ -28,7 +28,7 @@ struct ticker {
 #	error Unsupported OS
 #endif
 
-void ticker_init(struct ticker *tkr, long interval);
+void ticker_init(struct ticker *tkr, int interval);
 
 void tick(struct ticker *tkr);
 

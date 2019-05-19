@@ -5,7 +5,7 @@
 
 #	include <mach/mach_time.h>
 
-void ticker_init(struct ticker *tkr, long interval)
+void ticker_init(struct ticker *tkr, int interval)
 {
 	mach_timebase_info_data_t tb;
 	mach_timebase_info(&tb);
@@ -29,7 +29,7 @@ void tick(struct ticker *tkr)
 
 #elif defined(TICKER_WITH_CLOCK)
 
-void ticker_init(struct ticker *tkr, long interval)
+void ticker_init(struct ticker *tkr, int interval)
 {
 	clock_gettime(CLOCK_MONOTONIC, &tkr->last_tick);
 	tkr->interval = interval * 1000000;
