@@ -28,8 +28,10 @@ struct ticker {
 #	error Unsupported OS
 #endif
 
+// Initialize a given ticker with interval in milliseconds from 1 to 999.
 void ticker_init(struct ticker *tkr, int interval);
 
+// Go forward a tick, trying to account for time spent computing inbetween.
 void tick(struct ticker *tkr);
 
 #endif /* TICKER_H_ */
