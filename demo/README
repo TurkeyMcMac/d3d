@@ -4,6 +4,9 @@ code is located in 'main.c'.
 
 To compile the demo, run `make`.
 
+While the demo is intended to work on Windows, it probably doesn't, since I have
+no Windows machine on which to test.
+
 This demo has a special way of translating ASCII characters to curses colors.
 The table is shown in 'color-table'. This file is valid TSV. The CHAR column is
 the ASCII character. The FORE column is the foreground color. The BACK column is
