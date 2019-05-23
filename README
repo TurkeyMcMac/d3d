@@ -5,12 +5,18 @@
 |____/ \__,_|_| |_|\__, |\___|\___/|_| |_|____/|____/ 
 ===================|___/==============================
 
+OVERVIEW
+--------
 This is a 3D ray casting graphics library meant to draw dungeons and other
 square maze-like structures. It is intended for use with libcurses-based
 graphics, but it can be easily integrated with another drawing system.
 
+DOCUMENTATION
+-------------
 Documentation is in d3d.h. The demo is under the 'demo' directory.
 
+DEPENDENCIES
+------------
 This library depends only on the standard library and the standard math library
 (compile/link it with -lm.) The demo depends on libcurses for actually drawing
 the pixels.
