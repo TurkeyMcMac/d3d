@@ -15,6 +15,11 @@ DOCUMENTATION
 -------------
 Documentation is in d3d.h. The demo is under the 'demo' directory.
 
+USAGE
+-----
+To use this in another project, just copy in some files. d3d.c expects d3d.h and
+d3d-internal-structures.h to be in the same directory as it is.
+
 DEPENDENCIES
 ------------
 This library depends only on the standard library and the standard math library
