@@ -135,6 +135,7 @@ d3d_camera *d3d_new_camera(
 
 void d3d_free_camera(d3d_camera *cam)
 {
+	if (!cam) return;
 	d3d_free(cam->order);
 	// 'tans' and 'dists' are freed here too:
 	d3d_free(cam);
