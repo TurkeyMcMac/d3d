@@ -5,7 +5,6 @@
 // used by the library.
 
 #include "d3d.h"
-#include <stddef.h>
 
 #ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
 #	define OPTIMIZE_SAME_SPRITES 1
