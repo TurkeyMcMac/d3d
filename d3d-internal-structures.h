@@ -5,6 +5,7 @@
 // used by the library.
 
 #include "d3d.h"
+#include <stddef.h>
 
 #ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
 #	define OPTIMIZE_SAME_SPRITES 1
@@ -12,12 +13,17 @@
 #	define OPTIMIZE_SAME_SPRITES 0
 #endif
 
-struct d3d_texture_s {
-	// Width and height in pixels
-	size_t width, height;
-	// Row-major pixels of size width * height
-	d3d_pixel pixels[];
-};
+#define D3D_SIZED_TEXTURE(name, arr_size) struct name { \
+	/* Width and height in pixels */ \
+	size_t width, height; \
+	/* Row-major pixels */ \
+	d3d_pixel pixels arr_size; \
+}
+
+D3D_SIZED_TEXTURE(d3d_texture_s, [/* size is width * height */]);
+
+// Meant for internal use only
+D3D_SIZED_TEXTURE(d3d_texture_one_pixel, [1]);
 
 // This is for drawing multiple sprites.
 struct d3d_sprite_order {
@@ -38,8 +44,10 @@ struct d3d_camera_s {
 	double facing;
 	// The width and height of the camera screen, in pixels.
 	size_t width, height;
-	// The value of an empty pixel on the screen, one whose ray hit nothing.
-	d3d_pixel empty_pixel;
+	// The 1x1 texture containing the empty pixel.
+	struct d3d_texture_one_pixel empty_texture;
+	// The block containing all empty textures.
+	d3d_block_s blank_block;
 	// The last buffer used when sorting sprites, or NULL the first time.
 	struct d3d_sprite_order *order;
 	// The capacity (allocation size) of the field above.
