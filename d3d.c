@@ -419,8 +419,9 @@ void d3d_draw_sprites(
 			}
 			cam->order[move_to] = ord;
 		}
-	} else
-#endif
+	} // An ugly way to set last_sprites before executing the else:
+	else if (cam->last_sprites = sprites, 1)
+#endif /* OPTIMIZE_SAME_SPRITES */
 	{
 		if (n_sprites > cam->order_buf_cap) {
 			struct d3d_sprite_order *new_order = d3d_realloc(
