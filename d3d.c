@@ -410,13 +410,11 @@ void d3d_draw_sprites(
 			ord.dist = hypot(disp.x, disp.y);
 			move_to = i;
 			for (long j = (long)i - 1; j >= 0; --j) {
-				if (cam->order[j].dist > ord.dist) {
-					cam->order[j + 1] = cam->order[j];
-					move_to = j;
-				} else {
-					break;
-				}
+				if (cam->order[j].dist <= ord.dist) break;
+				move_to = j;
 			}
+			memmove(&cam->order[move_to + 1], &cam->order[move_to],
+				(i - move_to) * sizeof(*cam->order));
 			cam->order[move_to] = ord;
 		}
 	} // An ugly way to set last_sprites before executing the else:
