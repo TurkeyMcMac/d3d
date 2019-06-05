@@ -187,7 +187,7 @@ static const d3d_block_s *hit_wall(
 	const d3d_texture **txtr)
 {
 	const d3d_block_s *block;
-	do {
+	for (;;) {
 		size_t x, y;
 		d3d_direction inverted;
 		const d3d_block_s * const *blk = NULL;
@@ -226,7 +226,10 @@ static const d3d_block_s *hit_wall(
 		blk = GET(board, blocks, x, y);
 		if (!blk) return NULL; // The ray left the board
 		if ((*blk)->faces[*dir]) {
+			block = *blk;
+			*txtr = block->faces[*dir];
 			*dir = inverted;
+			return block;
 		} else {
 			// The face the ray hit is empty
 			move_dir(*dir, &x, &y);
@@ -244,14 +247,10 @@ static const d3d_block_s *hit_wall(
 				} else {
 					pos->y += copysign(0.0001, dpos->y);
 				}
-				// No wall was hit this time; UP indicates that:
-				*dir = D3D_DUP;
 			}
 		}
 		block = *blk;
-	} while (*dir == D3D_DUP); // While no wall was hit (UP indicates this.)
-	*txtr = block->faces[*dir];
-	return block;
+	}
 }
 
 void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
