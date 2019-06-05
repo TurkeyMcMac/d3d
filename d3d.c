@@ -183,11 +183,13 @@ static const d3d_block_s *hit_wall(
 	const d3d_board *board,
 	d3d_vec_s *pos,
 	const d3d_vec_s *dpos,
-	d3d_direction *dir)
+	d3d_direction *dir,
+	const d3d_texture **txtr)
 {
 	const d3d_block_s *block;
 	do {
 		size_t x, y;
+		d3d_direction inverted;
 		const d3d_block_s * const *blk = NULL;
 		d3d_vec_s tonext = {INFINITY, INFINITY};
 		d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
@@ -220,14 +222,21 @@ static const d3d_block_s *hit_wall(
 		}
 		x = tocoord(pos->x, dpos->x > 0.0);
 		y = tocoord(pos->y, dpos->y > 0.0);
+		inverted = invert_dir(*dir);
 		blk = GET(board, blocks, x, y);
 		if (!blk) return NULL; // The ray left the board
-		if (!(*blk)->faces[*dir]) {
+		if ((*blk)->faces[*dir]) {
+			*dir = inverted;
+		} else {
 			// The face the ray hit is empty
 			move_dir(*dir, &x, &y);
 			blk = GET(board, blocks, x, y);
 			if (!blk) return NULL; // The ray left the board
-			if (!(*blk)->faces[invert_dir(*dir)]) {
+			if ((*blk)->faces[inverted]) {
+				block = *blk;
+				*txtr = block->faces[inverted];
+				return block;
+			} else {
 				// The face the ray hit is empty
 				// Nudge the ray past the wall:
 				if (*dir == ew) {
@@ -241,6 +250,7 @@ static const d3d_block_s *hit_wall(
 		}
 		block = *blk;
 	} while (*dir == D3D_DUP); // While no wall was hit (UP indicates this.)
+	*txtr = block->faces[*dir];
 	return block;
 }
 
@@ -248,13 +258,17 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 {
 	d3d_direction face;
 	const d3d_block_s *block;
+	const d3d_texture *drawing;
 	d3d_vec_s pos = cam->pos, disp;
 	double dist;
 	double angle =
 		cam->facing + cam->fov.x * (0.5 - (double)x / cam->width);
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
-	block = hit_wall(board, &pos, &dpos, &face);
-	if (!block) block = &cam->blank_block;
+	block = hit_wall(board, &pos, &dpos, &face, &drawing);
+	if (!block) {
+		block = &cam->blank_block;
+		drawing = (d3d_texture *)&cam->empty_texture;
+	}
 	disp.x = pos.x - cam->pos.x;
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
@@ -268,7 +282,7 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 		if (dist_y > 0.0 && dist_y < 1.0) {
 			// A vertical wall was indeed hit
 			double dimension;
-			txtr = block->faces[face];
+			txtr = drawing;
 			// Choose the x coordinate of the pixel depending on
 			// wall orientation:
 			switch (face) {
