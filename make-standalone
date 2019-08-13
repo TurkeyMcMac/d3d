@@ -17,6 +17,7 @@ done
 awk -v exclude_hdr=$exclude_hdr -e '
 BEGIN {
 	print "/* NOTE: auto-generated amalgamation */\n";
+	print "#line 1";
 }
 
 /^#include "d3d.*\.h"$/ {
