@@ -14,7 +14,7 @@ while [ $# -ne 0 ]; do
 	fi
 	shift 1
 done
-awk -v exclude_hdr=$exclude_hdr -e '
+awk -v exclude_hdr=$exclude_hdr '
 BEGIN {
 	print "/* NOTE: auto-generated amalgamation */\n";
 	print "#line 1";
