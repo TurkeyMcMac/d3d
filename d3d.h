@@ -203,7 +203,7 @@ void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp);
 #define D3D_SIZED_TEXTURE(name, arr_size) struct name { \
 	/* Width and height in pixels */ \
 	size_t width, height; \
-	/* Row-major pixels */ \
+	/* Column-major pixels */ \
 	d3d_pixel pixels arr_size; \
 }
 
@@ -252,7 +252,7 @@ struct d3d_camera_s {
 	// first wall in that direction. This is calculated when drawing columns
 	// and is used when drawing sprites.
 	double *dists;
-	// The pixels of the screen in row-major order.
+	// The pixels of the screen in column-major order.
 	d3d_pixel pixels[];
 };
 
