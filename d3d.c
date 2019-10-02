@@ -1,5 +1,9 @@
-#include "d3d.h"
-#include "d3d-internal-structures.h"
+#define D3D_USE_INTERNAL_STRUCTS
+#ifdef D3D_HEADER_INCLUDE
+#	include D3D_HEADER_INCLUDE
+#else
+#	include "d3d.h"
+#endif
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -131,7 +135,7 @@ d3d_camera *d3d_new_camera(
 	cam->blank_block.faces[D3D_DDOWN] = (d3d_texture *)&cam->empty_texture;
 	cam->order = NULL;
 	cam->order_buf_cap = 0;
-#if OPTIMIZE_SAME_SPRITES
+#ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
 	cam->last_sprites = NULL;
 #endif
 	memset(cam->pixels, 0, pixels_size);
@@ -408,7 +412,7 @@ void d3d_draw_sprites(
 	const d3d_sprite_s sprites[])
 {
 	size_t i;
-#if OPTIMIZE_SAME_SPRITES
+#ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
 	if (sprites == cam->last_sprites && n_sprites == cam->order_buf_cap) {
 		// This assumes the sprites didn't move much, and are mostly
 		// sorted. Therefore, insertion sort is used.
@@ -432,7 +436,7 @@ void d3d_draw_sprites(
 		}
 	} // An ugly way to set last_sprites before executing the else:
 	else if (cam->last_sprites = sprites, 1)
-#endif /* OPTIMIZE_SAME_SPRITES */
+#endif /* !D3D_DONT_OPTIMIZE_SAME_SPRITES */
 	{
 		if (n_sprites > cam->order_buf_cap) {
 			struct d3d_sprite_order *new_order = d3d_realloc(
