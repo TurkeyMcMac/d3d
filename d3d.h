@@ -6,9 +6,9 @@
 /* COMPILE-TIME OPTIONS
  * --------------------
  *  - D3D_PIXEL_TYPE: Pixels can be any integer type you want, but you MUST
- *    compile both your code and this library with the same D3D_PIXEL_TYPE. You
- *    can define D3D_PIXEL_TYPE as one of the integer types from stdint.h.
- *    Pixels are usigned char by default.
+ *    compile both your code and this library with the same D3D_PIXEL_TYPE. The
+ *    types from stdint.h are not automatically available. Pixels are
+ *    unsigned char by default.
  *  - D3D_UNINITIALIZED_ALLOCATOR: Don't automatically initialize d3d_malloc,
  *    d3d_realloc, and d3d_realloc to the standard library equivalents. If this
  *    symbol is defined, the library user must set the variables themselves
