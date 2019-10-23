@@ -352,48 +352,6 @@ void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
 	}
 }
 
-// Draw a sprite with a pre-calculated distance from the camera.
-static void draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
-{
-	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
-	double angle, width, height, diff, maxdiff;
-	long start_x, start_y;
-	if (dist == 0.0) return;
-	// The angle of the sprite relative to the +x axis:
-	angle = atan2(disp.y, disp.x);
-	// The view width of the sprite in radians:
-	width = atan(sp->scale.x / dist) * 2;
-	// The max camera-sprite angle difference so the sprite's visible:
-	maxdiff = (cam->fov.x + width) / 2;
-	diff = angle_diff(cam->facing, angle);
-	if (fabs(diff) > maxdiff) return;
-	// The height of the sprite in pixels on the camera screen:
-	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
-	// The width of the sprite in pixels on the camera screen:
-	width = width / cam->fov.x * cam->width;
-	// The first x where the sprite appears on the screen:
-	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
-	// The first y where the sprite appears on the screen:
-	start_y = (cam->height - height) / 2;
-	for (size_t x = 0; x < width; ++x) {
-		// cx is the x on the camera screen; sx is the x on the sprite's
-		// texture:
-		size_t cx, sx;
-		cx = x + start_x;
-		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
-		sx = (double)x / width * sp->txtr->width;
-		for (size_t y = 0; y < height; ++y) {
-			// cy and sy correspond to cx and sx above:
-			size_t cy, sy;
-			cy = y + start_y;
-			if (cy >= cam->height) continue;
-			sy = (double)y / height * sp->txtr->height;
-			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
-		}
-	}
-}
-
 // Compare the sprite orders (see below). This is meant for qsort.
 static int compar_sprite_order(const void *a, const void *b)
 {
@@ -433,14 +391,55 @@ void d3d_draw_sprites(
 	i = n_sprites;
 	while (i--) {
 		struct d3d_sprite_order *ord = &cam->order[i];
-		draw_sprite(cam, &sprites[ord->index], ord->dist);
+		d3d_draw_sprite_dist(cam, &sprites[ord->index], ord->dist);
 	}
 }
 
 void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
 {
-	draw_sprite(cam, sp,
+	d3d_draw_sprite_dist(cam, sp,
 		hypot(sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y));
+}
+
+void d3d_draw_sprite_dist(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
+{
+	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
+	double angle, width, height, diff, maxdiff;
+	long start_x, start_y;
+	if (dist == 0.0) return;
+	// The angle of the sprite relative to the +x axis:
+	angle = atan2(disp.y, disp.x);
+	// The view width of the sprite in radians:
+	width = atan(sp->scale.x / dist) * 2;
+	// The max camera-sprite angle difference so the sprite's visible:
+	maxdiff = (cam->fov.x + width) / 2;
+	diff = angle_diff(cam->facing, angle);
+	if (fabs(diff) > maxdiff) return;
+	// The height of the sprite in pixels on the camera screen:
+	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
+	// The width of the sprite in pixels on the camera screen:
+	width = width / cam->fov.x * cam->width;
+	// The first x where the sprite appears on the screen:
+	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
+	// The first y where the sprite appears on the screen:
+	start_y = (cam->height - height) / 2;
+	for (size_t x = 0; x < width; ++x) {
+		// cx is the x on the camera screen; sx is the x on the sprite's
+		// texture:
+		size_t cx, sx;
+		cx = x + start_x;
+		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
+		sx = (double)x / width * sp->txtr->width;
+		for (size_t y = 0; y < height; ++y) {
+			// cy and sy correspond to cx and sx above:
+			size_t cy, sy;
+			cy = y + start_y;
+			if (cy >= cam->height) continue;
+			sy = (double)y / height * sp->txtr->height;
+			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
+			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
+		}
+	}
 }
 
 size_t d3d_camera_width(const d3d_camera *cam)

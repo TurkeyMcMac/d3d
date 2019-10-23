@@ -191,6 +191,10 @@ void d3d_draw_sprites(
  * probably want d3d_draw_sprites. */
 void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp);
 
+/* This is the same as d3d_draw_sprite above, but it uses a distance  already
+ * calculated. This must be the distance from the camera to the sprite. */
+void d3d_draw_sprite_dist(d3d_camera *cam, const d3d_sprite_s *sp, double dist);
+
 /* Complete structure definitions. */
 #ifdef D3D_USE_INTERNAL_STRUCTS
 
