@@ -135,9 +135,6 @@ d3d_camera *d3d_new_camera(
 	cam->blank_block.faces[D3D_DDOWN] = (d3d_texture *)&cam->empty_texture;
 	cam->order = NULL;
 	cam->order_buf_cap = 0;
-#ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
-	cam->last_sprites = NULL;
-#endif
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
@@ -412,58 +409,27 @@ void d3d_draw_sprites(
 	const d3d_sprite_s sprites[])
 {
 	size_t i;
-#ifndef D3D_DONT_OPTIMIZE_SAME_SPRITES
-	if (sprites == cam->last_sprites && n_sprites == cam->order_buf_cap) {
-		// This assumes the sprites didn't move much, and are mostly
-		// sorted. Therefore, insertion sort is used.
-		for (i = 0; i < n_sprites; ++i) {
-			size_t move_to;
-			struct d3d_sprite_order ord = cam->order[i];
-			size_t s = ord.index;
-			d3d_vec_s disp = {
-				sprites[s].pos.x - cam->pos.x,
-				sprites[s].pos.y - cam->pos.y
-			};
-			ord.dist = hypot(disp.x, disp.y);
-			move_to = i;
-			for (long j = (long)i - 1; j >= 0; --j) {
-				if (cam->order[j].dist <= ord.dist) break;
-				move_to = j;
-			}
-			memmove(&cam->order[move_to + 1], &cam->order[move_to],
-				(i - move_to) * sizeof(*cam->order));
-			cam->order[move_to] = ord;
+	if (n_sprites > cam->order_buf_cap) {
+		struct d3d_sprite_order *new_order = d3d_realloc(
+			cam->order, n_sprites * sizeof(*cam->order));
+		if (new_order) {
+			cam->order = new_order;
+			cam->order_buf_cap = n_sprites;
+		} else {
+			// XXX Silently truncate the list of sprites
+			// drawn. This may be a bad decision, but
+			// failure is unlikely and this shouldn't break
+			// any client code.
+			n_sprites = cam->order_buf_cap;
 		}
-	} // An ugly way to set last_sprites before executing the else:
-	else if (cam->last_sprites = sprites, 1)
-#endif /* !D3D_DONT_OPTIMIZE_SAME_SPRITES */
-	{
-		if (n_sprites > cam->order_buf_cap) {
-			struct d3d_sprite_order *new_order = d3d_realloc(
-				cam->order, n_sprites * sizeof(*cam->order));
-			if (new_order) {
-				cam->order = new_order;
-				cam->order_buf_cap = n_sprites;
-			} else {
-				// XXX Silently truncate the list of sprites
-				// drawn. This may be a bad decision, but
-				// failure is unlikely and this shouldn't break
-				// any client code.
-				n_sprites = cam->order_buf_cap;
-			}
-		}
-		for (i = 0; i < n_sprites; ++i) {
-			struct d3d_sprite_order *ord = &cam->order[i];
-			d3d_vec_s disp = {
-				sprites[i].pos.x - cam->pos.x,
-				sprites[i].pos.y - cam->pos.y
-			};
-			ord->dist = hypot(disp.x, disp.y);
-			ord->index = i;
-		}
-		qsort(cam->order, n_sprites, sizeof(*cam->order),
-			compar_sprite_order);
 	}
+	for (i = 0; i < n_sprites; ++i) {
+		struct d3d_sprite_order *ord = &cam->order[i];
+		ord->dist = hypot(sprites[i].pos.x - cam->pos.x,
+			sprites[i].pos.y - cam->pos.y);
+		ord->index = i;
+	}
+	qsort(cam->order, n_sprites, sizeof(*cam->order), compar_sprite_order);
 	i = n_sprites;
 	while (i--) {
 		struct d3d_sprite_order *ord = &cam->order[i];
