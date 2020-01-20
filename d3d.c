@@ -153,7 +153,7 @@ void d3d_free_camera(d3d_camera *cam)
 
 d3d_texture *d3d_new_texture(size_t width, size_t height)
 {
-	size_t pixels_size = width * height * sizeof(d3d_pixel *);
+	size_t pixels_size = width * height * sizeof(d3d_pixel);
 	d3d_texture *txtr =
 		d3d_malloc(offsetof(d3d_texture, pixels) + pixels_size);
 	if (!txtr) return NULL;
