@@ -163,6 +163,7 @@ d3d_camera *d3d_new_camera(
 	cam->order = NULL;
 	cam->order_buf_cap = 0;
 	cam->last_sprites = NULL;
+	cam->last_n_sprites = 0;
 	memset(cam->pixels, 0, pixels_size);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
@@ -414,7 +415,7 @@ void d3d_draw_sprites(
 	const d3d_sprite_s sprites[])
 {
 	size_t i;
-	if (n_sprites == cam->order_buf_cap && sprites == cam->last_sprites) {
+	if (n_sprites == cam->last_n_sprites && sprites == cam->last_sprites) {
 		// Assume the sprites didn't move/change in order much.
 		// Optimized Gnome Sort (which is pretty much Insertion Sort) is
 		// used since it is good with mostly sorted lists.
@@ -449,6 +450,7 @@ void d3d_draw_sprites(
 		qsort(cam->order, n_sprites, sizeof(*cam->order),
 			compar_sprite_order);
 		cam->last_sprites = sprites;
+		cam->last_n_sprites = n_sprites;
 	}
 	i = n_sprites;
 	while (i--) {
