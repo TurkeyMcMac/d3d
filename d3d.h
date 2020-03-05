@@ -173,9 +173,10 @@ void d3d_free_board(d3d_board *board);
 /* FRAMES
  * ------
  * Drawing a frame consists of
- *  - d3d_start_frame
- *  - d3d_draw_walls or d3d_draw_column for each column
- *  - Possibly d3d_draw_sprites or d3d_draw_sprite */
+ *  1. Calling either d3d_draw_walls or d3d_start_frame then d3d_draw_column for
+ *     each column.
+ *  2. Calling d3d_draw_sprite/d3d_draw_sprite/d3d_draw_sprite_dist if you need
+ *     to draw some sprites. */
 
 /* Begin drawing a frame. This is only necessary if d3d_draw_walls is not
  * called. */
