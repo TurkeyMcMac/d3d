@@ -108,14 +108,7 @@ static d3d_direction invert_dir(d3d_direction dir)
 
 // All boards are initialized by being filled with this block. It is transparent
 // on all sides.
-static const d3d_block_s empty_block = {{
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL
-}};
+static const d3d_block_s empty_block = {{ NULL, NULL, NULL, NULL, NULL, NULL }};
 
 d3d_camera *d3d_new_camera(
 	double fovx,
