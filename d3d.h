@@ -108,10 +108,9 @@ size_t d3d_camera_height(const d3d_camera *cam);
 d3d_pixel *d3d_camera_empty_pixel(d3d_camera *cam);
 
 /* Return a pointer to the camera's position. It is UNDEFINED BEHAVIOR for this
- * to be outside the limits of the board that is passed when d3d_draw_walls or
- * d3d_draw_column is called. The pointer is valid for the lifetime of the
- * camera, but the position may be changed when other functions modify the
- * camera. */
+ * to be outside the limits of the board that is passed when d3d_draw is called.
+ * The pointer is valid for the lifetime of the camera, but the position may be
+ * changed when other functions modify the camera. */
 d3d_vec_s *d3d_camera_position(d3d_camera *cam);
 
 /* Return a pointer to the camera's direction (in radians). This can be changed
@@ -120,9 +119,9 @@ d3d_vec_s *d3d_camera_position(d3d_camera *cam);
  */
 double *d3d_camera_facing(d3d_camera *cam);
 
-/* Get a pixel in the camera's view, AFTER a drawing function is called on the
- * camera. This returns NULL if the coordinates are out of range. Otherwise, the
- * pointer is valid until another function modifies the camera. */
+/* Get a pixel in the camera's view, AFTER d3d_draw is called on the camera.
+ * This returns NULL if the coordinates are out of range. Otherwise, the pointer
+ * is valid until another function modifies the camera. */
 const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y);
 
 /* Destroy a camera object. It shall never be used again. */
@@ -158,7 +157,7 @@ size_t d3d_board_height(const d3d_board *board);
 /* Get a block in a board. If the coordinates are out of range, NULL is
  * returned. Otherwise, a pointer to a block POINTER is returned. This pointed-
  * to pointer can be modified with a new block pointer. The outer pointer is
- * valid until the board is used in d3d_draw_column or d3d_draw_walls. */
+ * valid until the board is used in d3d_draw. */
 const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 
 /* Permanently destroy a board. */
