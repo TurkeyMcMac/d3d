@@ -164,40 +164,15 @@ const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 /* Permanently destroy a board. */
 void d3d_free_board(d3d_board *board);
 
-/* FRAMES
- * ------
- * Drawing a frame consists of
- *  1. Calling either d3d_draw_walls or d3d_start_frame then d3d_draw_column for
- *     each column.
- *  2. Calling d3d_draw_sprite/d3d_draw_sprite/d3d_draw_sprite_dist if you need
- *     to draw some sprites. */
-
-/* Begin drawing a frame. This is only necessary if d3d_draw_walls is not
- * called. */
-void d3d_start_frame(d3d_camera *cam);
-
-/* Draw a single column of the view, NOT including sprites. All columns must be
- * drawn before examining the pixels of a camera. */
-void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x);
-
-/* Draw all the wall columns for the view, making it valid to access pixels. */
-void d3d_draw_walls(d3d_camera *cam, const d3d_board *board);
-
-/* Draw a set of sprites in the world. The view is blocked by walls and other
- * closer sprites. */
-void d3d_draw_sprites(
+/* Record what the camera sees, making it valid to access camera pixels. This
+ * function is the entire point of this library. The given sprites are drawn
+ * inside the environment of the board. The sprites pointer can be NULL if
+ * n_sprites is 0. */
+void d3d_draw(
 	d3d_camera *cam,
+	const d3d_board *board,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[]);
-
-/* Draw a single sprite. This DOES NOT take into account the overlapping of
- * previously drawn closer sprites; it is just drawn closer than them. You
- * probably want d3d_draw_sprites. */
-void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp);
-
-/* This is the same as d3d_draw_sprite above, but it uses a distance  already
- * calculated. This must be the distance from the camera to the sprite. */
-void d3d_draw_sprite_dist(d3d_camera *cam, const d3d_sprite_s *sp, double dist);
 
 #endif /* D3D_H_ */
 

@@ -289,7 +289,7 @@ static const d3d_block_s *hit_wall(
 	}
 }
 
-void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
+static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 {
 	d3d_direction face;
 	const d3d_block_s *block;
@@ -371,22 +371,6 @@ void d3d_draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	}
 }
 
-void d3d_start_frame(d3d_camera *cam)
-{
-	cam->facing = fmod(cam->facing, 2 * M_PI);
-	if (cam->facing < 0.0) {
-		cam->facing += 2 * M_PI;
-	}
-}
-
-void d3d_draw_walls(d3d_camera *cam, const d3d_board *board)
-{
-	d3d_start_frame(cam);
-	for (size_t x = 0; x < cam->width; ++x) {
-		d3d_draw_column(cam, board, x);
-	}
-}
-
 // Compare the sprite orders (see below). This is meant for qsort.
 static int compar_sprite_order(const void *a, const void *b)
 {
@@ -396,7 +380,51 @@ static int compar_sprite_order(const void *a, const void *b)
 	return 0;
 }
 
-void d3d_draw_sprites(
+static void draw_sprite_dist(
+	d3d_camera *cam,
+	const d3d_sprite_s *sp,
+	double dist)
+{
+	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
+	double angle, width, height, diff, maxdiff;
+	long start_x, start_y;
+	if (dist == 0.0) return;
+	// The angle of the sprite relative to the +x axis:
+	angle = atan2(disp.y, disp.x);
+	// The view width of the sprite in radians:
+	width = atan(sp->scale.x / dist) * 2;
+	// The max camera-sprite angle difference so the sprite's visible:
+	maxdiff = (cam->fov.x + width) / 2;
+	diff = angle_diff(cam->facing, angle);
+	if (fabs(diff) > maxdiff) return;
+	// The height of the sprite in pixels on the camera screen:
+	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
+	// The width of the sprite in pixels on the camera screen:
+	width = width / cam->fov.x * cam->width;
+	// The first x where the sprite appears on the screen:
+	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
+	// The first y where the sprite appears on the screen:
+	start_y = (cam->height - height) / 2;
+	for (size_t x = 0; x < width; ++x) {
+		// cx is the x on the camera screen; sx is the x on the sprite's
+		// texture:
+		size_t cx, sx;
+		cx = x + start_x;
+		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
+		sx = (double)x / width * sp->txtr->width;
+		for (size_t y = 0; y < height; ++y) {
+			// cy and sy correspond to cx and sx above:
+			size_t cy, sy;
+			cy = y + start_y;
+			if (cy >= cam->height) continue;
+			sy = (double)y / height * sp->txtr->height;
+			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
+			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
+		}
+	}
+}
+
+static void draw_sprites(
 	d3d_camera *cam,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[])
@@ -449,55 +477,24 @@ void d3d_draw_sprites(
 	i = n_sprites;
 	while (i--) {
 		struct d3d_sprite_order *ord = &cam->order[i];
-		d3d_draw_sprite_dist(cam, &sprites[ord->index], ord->dist);
+		draw_sprite_dist(cam, &sprites[ord->index], ord->dist);
 	}
 }
 
-void d3d_draw_sprite(d3d_camera *cam, const d3d_sprite_s *sp)
+void d3d_draw(d3d_camera *cam,
+	const d3d_board *board,
+	size_t n_sprites,
+	const d3d_sprite_s sprites[])
 {
-	d3d_draw_sprite_dist(cam, sp,
-		hypot(sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y));
-}
-
-void d3d_draw_sprite_dist(d3d_camera *cam, const d3d_sprite_s *sp, double dist)
-{
-	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
-	double angle, width, height, diff, maxdiff;
-	long start_x, start_y;
-	if (dist == 0.0) return;
-	// The angle of the sprite relative to the +x axis:
-	angle = atan2(disp.y, disp.x);
-	// The view width of the sprite in radians:
-	width = atan(sp->scale.x / dist) * 2;
-	// The max camera-sprite angle difference so the sprite's visible:
-	maxdiff = (cam->fov.x + width) / 2;
-	diff = angle_diff(cam->facing, angle);
-	if (fabs(diff) > maxdiff) return;
-	// The height of the sprite in pixels on the camera screen:
-	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
-	// The width of the sprite in pixels on the camera screen:
-	width = width / cam->fov.x * cam->width;
-	// The first x where the sprite appears on the screen:
-	start_x = (cam->width - width) / 2 + diff / cam->fov.x * cam->width;
-	// The first y where the sprite appears on the screen:
-	start_y = (cam->height - height) / 2;
-	for (size_t x = 0; x < width; ++x) {
-		// cx is the x on the camera screen; sx is the x on the sprite's
-		// texture:
-		size_t cx, sx;
-		cx = x + start_x;
-		if (cx >= cam->width || dist >= cam->dists[cx]) continue;
-		sx = (double)x / width * sp->txtr->width;
-		for (size_t y = 0; y < height; ++y) {
-			// cy and sy correspond to cx and sx above:
-			size_t cy, sy;
-			cy = y + start_y;
-			if (cy >= cam->height) continue;
-			sy = (double)y / height * sp->txtr->height;
-			d3d_pixel p = *GET(sp->txtr, pixels, sx, sy);
-			if (p != sp->transparent) *GET(cam, pixels, cx, cy) = p;
-		}
+	// Canonicalize camera direction:
+	cam->facing = fmod(cam->facing, 2 * M_PI);
+	if (cam->facing < 0.0) {
+		cam->facing += 2 * M_PI;
 	}
+	for (size_t x = 0; x < cam->width; ++x) {
+		draw_column(cam, board, x);
+	}
+	draw_sprites(cam, n_sprites, sprites);
 }
 
 size_t d3d_camera_width(const d3d_camera *cam)

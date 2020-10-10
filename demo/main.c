@@ -178,8 +178,7 @@ int main(void)
 		double move_angle;
 		tick(&tkr);
 		if (screen_refresh) {
-			d3d_draw_walls(cam, brd);
-			d3d_draw_sprites(cam, N_BATS, bats);
+			d3d_draw(cam, brd, N_BATS, bats);
 			// Draw the pixels on the terminal:
 			for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 				for (size_t x = 0;
