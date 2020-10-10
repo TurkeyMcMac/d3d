@@ -308,6 +308,24 @@ static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 	disp.y = pos.y - cam->pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
 	cam->dists[x] = dist;
+	// Choose how far across the wall to get pixels from based on the wall
+	// orientation, and put the distance in dimension:
+	double dimension;
+	switch (face) {
+	case D3D_DSOUTH:
+		dimension = mod1(pos.x);
+		break;
+	case D3D_DNORTH:
+		dimension = revmod1(pos.x);
+		break;
+	case D3D_DWEST:
+		dimension = mod1(pos.y);
+		break;
+	case D3D_DEAST:
+	default: // The default case shouldn't be reached.
+		dimension = revmod1(pos.y);
+		break;
+	}
 	for (size_t t = 0; t < cam->height; ++t) {
 		const d3d_texture *txtr;
 		size_t tx, ty;
@@ -316,26 +334,7 @@ static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 		double dist_y = cam->tans[t] * dist + 0.5;
 		if (dist_y > 0.0 && dist_y < 1.0) {
 			// A vertical wall was indeed hit
-			double dimension;
 			txtr = drawing;
-			// Choose the x coordinate of the pixel depending on
-			// wall orientation:
-			switch (face) {
-			case D3D_DSOUTH:
-				dimension = mod1(pos.x);
-				break;
-			case D3D_DNORTH:
-				dimension = revmod1(pos.x);
-				break;
-			case D3D_DWEST:
-				dimension = mod1(pos.y);
-				break;
-			case D3D_DEAST:
-				dimension = revmod1(pos.y);
-				break;
-			default:
-				continue;
-			}
 			tx = dimension * txtr->width;
 			ty = txtr->height * dist_y;
 		} else {
