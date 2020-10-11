@@ -89,12 +89,15 @@ typedef enum {
 } d3d_direction;
 
 /* Allocate a new camera with given field of view in the x and y directions (in
- * radians) and a given view width and height in pixels. */
+ * radians) and a given view width and height in pixels. The empty pixel is the
+ * pixel value set in the camera when a cast ray hits nothing (it gets off the
+ * edge of the board.) */
 d3d_camera *d3d_new_camera(
 	double fovx,
 	double fovy,
 	size_t width,
-	size_t height);
+	size_t height,
+	d3d_pixel empty_pixel);
 
 /* Get the view width of a camera in pixels. */
 size_t d3d_camera_width(const d3d_camera *cam);
@@ -102,15 +105,9 @@ size_t d3d_camera_width(const d3d_camera *cam);
 /* Get the view height of a camera in pixels. */
 size_t d3d_camera_height(const d3d_camera *cam);
 
-/* Return a pointer to the empty pixel. This is the pixel value set in the
- * camera when a cast ray hits nothing (it gets off the edge of the board.) The
- * pointer is valid for the lifetime of the camera. */
-d3d_pixel *d3d_camera_empty_pixel(d3d_camera *cam);
-
-/* Return a pointer to the camera's position. It is UNDEFINED BEHAVIOR for this
- * to be outside the limits of the board that is passed when d3d_draw is called.
- * The pointer is valid for the lifetime of the camera, but the position may be
- * changed when other functions modify the camera. */
+/* Return a pointer to the camera's position. The pointer is valid for the
+ * lifetime of the camera, but the position may be changed when other functions
+ * modify the camera. */
 d3d_vec_s *d3d_camera_position(d3d_camera *cam);
 
 /* Return a pointer to the camera's direction (in radians). This can be changed
@@ -119,16 +116,17 @@ d3d_vec_s *d3d_camera_position(d3d_camera *cam);
  */
 double *d3d_camera_facing(d3d_camera *cam);
 
-/* Get a pixel in the camera's view, AFTER d3d_draw is called on the camera.
- * This returns NULL if the coordinates are out of range. Otherwise, the pointer
- * is valid until another function modifies the camera. */
+/* Get a pixel in the camera's view. This returns NULL if the coordinates are
+ * out of range. Otherwise, the pointer is valid until another function takes
+ * the camera as a non-const parameter. If d3d_draw hasn't yet been called with
+ * the camera, all the pixels are the camera's empty_pixel. */
 const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y);
 
 /* Destroy a camera object. It shall never be used again. */
 void d3d_free_camera(d3d_camera *cam);
 
-/* Allocate a new texture without its pixels initialized. */
-d3d_texture *d3d_new_texture(size_t width, size_t height);
+/* Allocate a new texture with its pixels initialized to the fill pixel. */
+d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill);
 
 /* Get the width of the texture in pixels. */
 size_t d3d_texture_width(const d3d_texture *txtr);
@@ -137,16 +135,17 @@ size_t d3d_texture_width(const d3d_texture *txtr);
 size_t d3d_texture_height(const d3d_texture *txtr);
 
 /* Get a pixel at a coordinate on a texture. NULL is returned if the coordinates
- * are out of range. The pointer is valid until the texture is used in a
- * d3d_block_s or a d3d_sprite_s. */
+ * are out of range. The pointer is valid until the texture is used (indirectly)
+ * in d3d_draw. */
 d3d_pixel *d3d_texture_get(d3d_texture *txtr, size_t x, size_t y);
 
 /* Permanently destroy a texture. */
 void d3d_free_texture(d3d_texture *txtr);
 
 /* Create a new board with a width and height. All its blocks are initially
- * empty, transparent on all sides. */
-d3d_board *d3d_new_board(size_t width, size_t height);
+ * set to the block fill. If fill is NULL, all the blocks are set to an
+ * empty/transparent block. */
+d3d_board *d3d_new_board(size_t width, size_t height, const d3d_block_s *fill);
 
 /* Get the width of the board in blocks. */
 size_t d3d_board_width(const d3d_board *board);
@@ -166,7 +165,8 @@ void d3d_free_board(d3d_board *board);
 /* Record what the camera sees, making it valid to access camera pixels. This
  * function is the entire point of this library. The given sprites are drawn
  * inside the environment of the board. The sprites pointer can be NULL if
- * n_sprites is 0. */
+ * n_sprites is 0. Who knows what pixels will be captured if the camera is not
+ * within the borders of the board. */
 void d3d_draw(
 	d3d_camera *cam,
 	const d3d_board *board,

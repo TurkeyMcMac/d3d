@@ -40,6 +40,19 @@ void *(*d3d_realloc)(void *, size_t) = realloc;
 void (*d3d_free)(void *) = free;
 #endif
 
+static d3d_pixel camera_empty_pixel(d3d_camera *cam)
+{
+	return cam->blank_block.faces[0]->pixels[0];
+}
+
+static void empty_camera_pixels(d3d_camera *cam)
+{
+	d3d_pixel empty_pixel = camera_empty_pixel(cam);
+	for (size_t i = 0; i < cam->width * cam->height; ++i) {
+		cam->pixels[i] = empty_pixel;
+	}
+}
+
 static size_t texture_size(size_t width, size_t height)
 {
 	return offsetof(d3d_texture, pixels)
@@ -106,23 +119,19 @@ static d3d_direction invert_dir(d3d_direction dir)
 	}
 }
 
-// All boards are initialized by being filled with this block. It is transparent
-// on all sides.
-static const d3d_block_s empty_block = {{ NULL, NULL, NULL, NULL, NULL, NULL }};
-
 d3d_camera *d3d_new_camera(
 	double fovx,
 	double fovy,
 	size_t width,
-	size_t height)
+	size_t height,
+	d3d_pixel empty_pixel)
 {
 	size_t size;
-	size_t pixels_size;
 	size_t txtr_offset, tans_offset, dists_offset;
 	d3d_texture *empty_txtr;
 	d3d_camera *cam;
-	pixels_size = width * height * sizeof(d3d_pixel);
-	size = offsetof(d3d_camera, pixels) + pixels_size;
+	size = offsetof(d3d_camera, pixels)
+		+ width * height * sizeof(d3d_pixel);
 	ALIGN_SIZE(size, d3d_texture);
 	txtr_offset = size;
 	size += texture_size(1, 1);
@@ -146,7 +155,7 @@ d3d_camera *d3d_new_camera(
 	cam->height = height;
 	empty_txtr->width = 1;
 	empty_txtr->height = 1;
-	empty_txtr->pixels[0] = 0;
+	empty_txtr->pixels[0] = empty_pixel;
 	cam->blank_block.faces[D3D_DNORTH] =
 	cam->blank_block.faces[D3D_DSOUTH] =
 	cam->blank_block.faces[D3D_DEAST] =
@@ -157,7 +166,7 @@ d3d_camera *d3d_new_camera(
 	cam->order_buf_cap = 0;
 	cam->last_sprites = NULL;
 	cam->last_n_sprites = 0;
-	memset(cam->pixels, 0, pixels_size);
+	empty_camera_pixels(cam);
 	for (size_t y = 0; y < height; ++y) {
 		double angle = fovy * ((double)y / height - 0.5);
 		cam->tans[y] = tan(angle);
@@ -173,18 +182,20 @@ void d3d_free_camera(d3d_camera *cam)
 	d3d_free(cam);
 }
 
-d3d_texture *d3d_new_texture(size_t width, size_t height)
+d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill)
 {
 	size_t size = texture_size(width, height);
 	d3d_texture *txtr = d3d_malloc(size);
 	if (!txtr) return NULL;
 	txtr->width = width;
 	txtr->height = height;
-	memset(txtr->pixels, 0, size - offsetof(d3d_texture, pixels));
+	for (size_t i = 0; i < width * height; ++i) {
+		txtr->pixels[i] = fill;
+	}
 	return txtr;
 }
 
-d3d_board *d3d_new_board(size_t width, size_t height)
+d3d_board *d3d_new_board(size_t width, size_t height, const d3d_block_s *fill)
 {
 	size_t blocks_size = width * height * sizeof(d3d_block_s *);
 	d3d_board *board =
@@ -192,8 +203,11 @@ d3d_board *d3d_new_board(size_t width, size_t height)
 	if (!board) return NULL;
 	board->width = width;
 	board->height = height;
+	static const d3d_block_s empty_block = {{ NULL, NULL, NULL, NULL,
+		NULL, NULL }};
+	if (!fill) fill = &empty_block;
 	for (size_t i = 0; i < width * height; ++i) {
-		board->blocks[i] = &empty_block;
+		board->blocks[i] = fill;
 	}
 	return board;
 }
@@ -359,7 +373,7 @@ static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 		continue;
 
 	no_texture:
-		*GET(cam, pixels, x, t) = *d3d_camera_empty_pixel(cam);
+		*GET(cam, pixels, x, t) = camera_empty_pixel(cam);
 	}
 }
 
@@ -478,15 +492,20 @@ void d3d_draw(d3d_camera *cam,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[])
 {
-	// Canonicalize camera direction:
-	cam->facing = fmod(cam->facing, 2 * M_PI);
-	if (cam->facing < 0.0) {
-		cam->facing += 2 * M_PI;
+	if (cam->pos.x > 0.0 && cam->pos.y > 0.0
+	 && cam->pos.x < board->width && cam->pos.y < board->height) {
+		// Canonicalize camera direction:
+		cam->facing = fmod(cam->facing, 2 * M_PI);
+		if (cam->facing < 0.0) {
+			cam->facing += 2 * M_PI;
+		}
+		for (size_t x = 0; x < cam->width; ++x) {
+			draw_column(cam, board, x);
+		}
+		draw_sprites(cam, n_sprites, sprites);
+	} else {
+		empty_camera_pixels(cam);
 	}
-	for (size_t x = 0; x < cam->width; ++x) {
-		draw_column(cam, board, x);
-	}
-	draw_sprites(cam, n_sprites, sprites);
 }
 
 size_t d3d_camera_width(const d3d_camera *cam)
@@ -497,11 +516,6 @@ size_t d3d_camera_width(const d3d_camera *cam)
 size_t d3d_camera_height(const d3d_camera *cam)
 {
 	return cam->height;
-}
-
-d3d_pixel *d3d_camera_empty_pixel(d3d_camera *cam)
-{
-	return (d3d_pixel *)&cam->blank_block.faces[0]->pixels[0];
 }
 
 d3d_vec_s *d3d_camera_position(d3d_camera *cam)

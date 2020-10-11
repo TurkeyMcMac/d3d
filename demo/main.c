@@ -97,7 +97,7 @@ void end_screen(void)
 // Make a texture and fill it with the given memory of size width * height.
 static d3d_texture *make_texture(size_t width, size_t height, const char *pix)
 {
-	d3d_texture *txtr = d3d_new_texture(width, height);
+	d3d_texture *txtr = d3d_new_texture(width, height, ' ');
 	size_t i = 0;
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
@@ -126,9 +126,9 @@ int main(void)
 	d3d_block_s empty = {{NULL, NULL, NULL, NULL, wall, wall}};
 	// The camera:
 	d3d_camera *cam = d3d_new_camera(FOV_X,
-		LINES * FOV_X / COLS / PIXEL_ASPECT, COLS, LINES);
+		LINES * FOV_X / COLS / PIXEL_ASPECT, COLS, LINES, ' ');
 	// The world:
-	d3d_board *brd = d3d_new_board(4, 4);
+	d3d_board *brd = d3d_new_board(4, 4, &walls);
 	// Bat sprites:
 	d3d_sprite_s bats[N_BATS] = {
 		{
@@ -149,24 +149,11 @@ int main(void)
 		{0.03, 0.02},
 		{0.01, -0.04}
 	};
-	*d3d_camera_empty_pixel(cam) = ' ';
 	// Make a cavity in the world center:
-	*d3d_board_get(brd, 0, 0) = &walls;
-	*d3d_board_get(brd, 1, 0) = &walls;
-	*d3d_board_get(brd, 2, 0) = &walls;
-	*d3d_board_get(brd, 3, 0) = &walls;
-	*d3d_board_get(brd, 0, 1) = &walls;
 	*d3d_board_get(brd, 1, 1) = &empty;
 	*d3d_board_get(brd, 2, 1) = &empty;
-	*d3d_board_get(brd, 3, 1) = &walls;
-	*d3d_board_get(brd, 0, 2) = &walls;
 	*d3d_board_get(brd, 1, 2) = &empty;
 	*d3d_board_get(brd, 2, 2) = &empty;
-	*d3d_board_get(brd, 3, 2) = &walls;
-	*d3d_board_get(brd, 0, 3) = &walls;
-	*d3d_board_get(brd, 1, 3) = &walls;
-	*d3d_board_get(brd, 2, 3) = &walls;
-	*d3d_board_get(brd, 3, 3) = &walls;
 	d3d_camera_position(cam)->x = 1.4;
 	d3d_camera_position(cam)->y = 1.4;
 	init_pairs();
