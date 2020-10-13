@@ -30,14 +30,21 @@
 #	define M_PI 3.14159265358979323846
 #endif
 
-#ifdef D3D_UNINITIALIZED_ALLOCATOR
-void *(*d3d_malloc)(size_t);
-void *(*d3d_realloc)(void *, size_t);
-void (*d3d_free)(void *);
-#else
-void *(*d3d_malloc)(size_t) = malloc;
-void *(*d3d_realloc)(void *, size_t) = realloc;
-void (*d3d_free)(void *) = free;
+#ifndef D3D_CUSTOM_ALLOCATOR
+void *d3d_malloc(size_t size)
+{
+	return malloc(size);
+}
+
+void *d3d_realloc(void *mem, size_t size)
+{
+	return realloc(mem, size);
+}
+
+void d3d_free(void *mem)
+{
+	free(mem);
+}
 #endif
 
 static d3d_pixel camera_empty_pixel(d3d_camera *cam)

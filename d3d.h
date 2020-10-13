@@ -9,12 +9,12 @@
  *    compile both your code and this library with the same D3D_PIXEL_TYPE. The
  *    types from stdint.h are not automatically available. Pixels are
  *    unsigned char by default.
- *  - D3D_UNINITIALIZED_ALLOCATOR: Don't automatically initialize d3d_malloc,
- *    d3d_realloc, and d3d_realloc to the standard library equivalents. If this
- *    symbol is defined, the library user must set the variables themselves
- *    before calling other functions. You NEED NOT compile the client code as
- *    well with this option, although you may need to change your client code
- *    depending on whether this option is set.
+ *  - D3D_CUSTOM_ALLOCATOR: Don't use malloc, realloc, and free to implement
+ *    d3d_malloc, d3d_realloc, and d3d_free within d3d.c. Instead, the compiled
+ *    source code must be linked with custom implementations of those three
+ *    functions. You NEED NOT compile d3d.c and your code with the same setting
+ *    of this option, although your code may need to provide implementations
+ *    depending on the setting used with d3d.c.
  *  - D3D_USE_INTERNAL_STRUCTS: Define this to have access to unstable internal
  *    structure layouts of opaque types used by the library. You NEED NOT
  *    compile d3d.c and your code with the same setting of this option.
@@ -27,12 +27,13 @@
 #endif
 
 /* Custom allocator routines. These have the same contract of behaviour as the
- * corresponding functions in the standard library. If the preprocessor symbol
- * D3D_UNINITIALIZED_ALLOCATOR is not defined, these are automatically set to
- * the corresponding standard library functions. */
-extern void *(*d3d_malloc)(size_t);
-extern void *(*d3d_realloc)(void *, size_t);
-extern void (*d3d_free)(void *);
+ * corresponding functions in the standard library. They are meant for internal
+ * use by the library. If the preprocessor symbol D3D_CUSTOM_ALLOCATOR is
+ * defined, provide implementations in another compilation unit. Otherwise, the
+ * library implements these with the standard library functions. */
+void *d3d_malloc(size_t);
+void *d3d_realloc(void *, size_t);
+void d3d_free(void *);
 
 /* A single numeric pixel, for storing whatever data you provide in a
  * texture. */
