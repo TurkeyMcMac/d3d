@@ -155,7 +155,6 @@ d3d_camera *d3d_new_camera(
 	empty_txtr = (void *)((char *)cam + txtr_offset);
 	cam->tans = (void *)((char *)cam + tans_offset);
 	cam->dists = (void *)((char *)cam + dists_offset);
-	cam->facing = 0.0;
 	cam->fov.x = fovx;
 	cam->fov.y = fovy;
 	cam->width = width;
@@ -303,23 +302,27 @@ static const d3d_block_s *hit_wall(
 	}
 }
 
-static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
+static void draw_column(
+	d3d_camera *cam,
+	d3d_vec_s cam_pos,
+	double cam_facing,
+	const d3d_board *board,
+	size_t x)
 {
 	d3d_direction face;
 	const d3d_block_s *block;
 	const d3d_texture *drawing;
-	d3d_vec_s pos = cam->pos, disp;
+	d3d_vec_s pos = cam_pos, disp;
 	double dist;
-	double angle =
-		cam->facing + cam->fov.x * (0.5 - (double)x / cam->width);
+	double angle = cam_facing + cam->fov.x * (0.5 - (double)x / cam->width);
 	d3d_vec_s dpos = {cos(angle) * 0.001, sin(angle) * 0.001};
 	block = hit_wall(board, &pos, &dpos, &face, &drawing);
 	if (!block) {
 		block = &cam->blank_block;
 		drawing = (d3d_texture *)block->faces[0];
 	}
-	disp.x = pos.x - cam->pos.x;
-	disp.y = pos.y - cam->pos.y;
+	disp.x = pos.x - cam_pos.x;
+	disp.y = pos.y - cam_pos.y;
 	dist = sqrt(disp.x * disp.x + disp.y * disp.y);
 	cam->dists[x] = dist;
 	// Choose how far across the wall to get pixels from based on the wall
@@ -356,8 +359,8 @@ static void draw_column(d3d_camera *cam, const d3d_board *board, size_t x)
 			// displacement is adjusted accordingly:
 			double newdist = 0.5 / fabs(cam->tans[t]);
 			d3d_vec_s newpos = {
-				cam->pos.x + disp.x / dist * newdist,
-				cam->pos.y + disp.y / dist * newdist
+				cam_pos.x + disp.x / dist * newdist,
+				cam_pos.y + disp.y / dist * newdist
 			};
 			size_t bx = tocoord(newpos.x, dpos.x > 0.0),
 			       by = tocoord(newpos.y, dpos.y > 0.0);
@@ -395,10 +398,12 @@ static int compar_sprite_order(const void *a, const void *b)
 
 static void draw_sprite_dist(
 	d3d_camera *cam,
+	d3d_vec_s cam_pos,
+	double cam_facing,
 	const d3d_sprite_s *sp,
 	double dist)
 {
-	d3d_vec_s disp = { sp->pos.x - cam->pos.x, sp->pos.y - cam->pos.y };
+	d3d_vec_s disp = { sp->pos.x - cam_pos.x, sp->pos.y - cam_pos.y };
 	double angle, width, height, diff, maxdiff;
 	long start_x, start_y;
 	if (dist == 0.0) return;
@@ -408,7 +413,7 @@ static void draw_sprite_dist(
 	width = atan(sp->scale.x / dist) * 2;
 	// The max camera-sprite angle difference so the sprite's visible:
 	maxdiff = (cam->fov.x + width) / 2;
-	diff = angle_diff(cam->facing, angle);
+	diff = angle_diff(cam_facing, angle);
 	if (fabs(diff) > maxdiff) return;
 	// The height of the sprite in pixels on the camera screen:
 	height = atan(sp->scale.y / dist) * 2 / cam->fov.y * cam->height;
@@ -439,6 +444,8 @@ static void draw_sprite_dist(
 
 static void draw_sprites(
 	d3d_camera *cam,
+	d3d_vec_s cam_pos,
+	double cam_facing,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[])
 {
@@ -450,8 +457,8 @@ static void draw_sprites(
 			size_t move_to;
 			struct d3d_sprite_order ord = cam->order[i];
 			size_t s = ord.index;
-			ord.dist = hypot(sprites[s].pos.x - cam->pos.x,
-				sprites[s].pos.y - cam->pos.y);
+			ord.dist = hypot(sprites[s].pos.x - cam_pos.x,
+				sprites[s].pos.y - cam_pos.y);
 			move_to = i;
 			for (long j = (long)i - 1; j >= 0; --j) {
 				if (cam->order[j].dist <= ord.dist) break;
@@ -478,8 +485,8 @@ static void draw_sprites(
 		}
 		for (i = 0; i < n_sprites; ++i) {
 			struct d3d_sprite_order *ord = &cam->order[i];
-			ord->dist = hypot(sprites[i].pos.x - cam->pos.x,
-				sprites[i].pos.y - cam->pos.y);
+			ord->dist = hypot(sprites[i].pos.x - cam_pos.x,
+				sprites[i].pos.y - cam_pos.y);
 			ord->index = i;
 		}
 		qsort(cam->order, n_sprites, sizeof(*cam->order),
@@ -490,26 +497,30 @@ static void draw_sprites(
 	i = n_sprites;
 	while (i--) {
 		struct d3d_sprite_order *ord = &cam->order[i];
-		draw_sprite_dist(cam, &sprites[ord->index], ord->dist);
+		draw_sprite_dist(cam, cam_pos, cam_facing, &sprites[ord->index],
+			ord->dist);
 	}
 }
 
-void d3d_draw(d3d_camera *cam,
+void d3d_draw(
+	d3d_camera *cam,
+	d3d_vec_s cam_pos,
+	double cam_facing,
 	const d3d_board *board,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[])
 {
-	if (cam->pos.x > 0.0 && cam->pos.y > 0.0
-	 && cam->pos.x < board->width && cam->pos.y < board->height) {
+	if (cam_pos.x > 0.0 && cam_pos.y > 0.0
+	 && cam_pos.x < board->width && cam_pos.y < board->height) {
 		// Canonicalize camera direction:
-		cam->facing = fmod(cam->facing, 2 * M_PI);
-		if (cam->facing < 0.0) {
-			cam->facing += 2 * M_PI;
+		cam_facing = fmod(cam_facing, 2 * M_PI);
+		if (cam_facing < 0.0) {
+			cam_facing += 2 * M_PI;
 		}
 		for (size_t x = 0; x < cam->width; ++x) {
-			draw_column(cam, board, x);
+			draw_column(cam, cam_pos, cam_facing, board, x);
 		}
-		draw_sprites(cam, n_sprites, sprites);
+		draw_sprites(cam, cam_pos, cam_facing, n_sprites, sprites);
 	} else {
 		empty_camera_pixels(cam);
 	}
@@ -523,16 +534,6 @@ size_t d3d_camera_width(const d3d_camera *cam)
 size_t d3d_camera_height(const d3d_camera *cam)
 {
 	return cam->height;
-}
-
-d3d_vec_s *d3d_camera_position(d3d_camera *cam)
-{
-	return &cam->pos;
-}
-
-double *d3d_camera_facing(d3d_camera *cam)
-{
-	return &cam->facing;
 }
 
 const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y)

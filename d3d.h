@@ -106,17 +106,6 @@ size_t d3d_camera_width(const d3d_camera *cam);
 /* Get the view height of a camera in pixels. */
 size_t d3d_camera_height(const d3d_camera *cam);
 
-/* Return a pointer to the camera's position. The pointer is valid for the
- * lifetime of the camera, but the position may be changed when other functions
- * modify the camera. */
-d3d_vec_s *d3d_camera_position(d3d_camera *cam);
-
-/* Return a pointer to the camera's direction (in radians). This can be changed
- * without regard for any range. The pointer is valid for the lifetime of the
- * camera, but the angle may be changed when other functions modify the camera.
- */
-double *d3d_camera_facing(d3d_camera *cam);
-
 /* Get a pixel in the camera's view. This returns NULL if the coordinates are
  * out of range. Otherwise, the pointer is valid until another function takes
  * the camera as a non-const parameter. If d3d_draw hasn't yet been called with
@@ -164,12 +153,16 @@ const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 void d3d_free_board(d3d_board *board);
 
 /* Record what the camera sees, making it valid to access camera pixels. This
- * function is the entire point of this library. The given sprites are drawn
- * inside the environment of the board. The sprites pointer can be NULL if
- * n_sprites is 0. Who knows what pixels will be captured if the camera is not
- * within the borders of the board. */
+ * function is the entire point of this library. The camera is positioned
+ * according to cam_pos and is facing in the direction cam_facing, measured in
+ * radians. The given sprites are drawn inside the environment of the board. The
+ * sprites pointer can be NULL if n_sprites is 0. Who knows what pixels will be
+ * captured if the camera is not within the borders of the board. Sprites
+ * outside the board will not be drawn. */
 void d3d_draw(
 	d3d_camera *cam,
+	d3d_vec_s cam_pos,
+	double cam_facing,
 	const d3d_board *board,
 	size_t n_sprites,
 	const d3d_sprite_s sprites[]);
@@ -196,14 +189,9 @@ struct d3d_sprite_order {
 };
 
 struct d3d_camera_s {
-	// The position of the camera on the board
-	d3d_vec_s pos;
 	// The field of view in the x (sideways) and y (vertical) screen axes.
 	// Measured in radians.
 	d3d_vec_s fov;
-	// The direction of the camera relative to the positive x direction,
-	// increasing counterclockwise. In the range [0, 2π).
-	double facing;
 	// The width and height of the camera screen, in pixels.
 	size_t width, height;
 	// The block containing all empty textures.

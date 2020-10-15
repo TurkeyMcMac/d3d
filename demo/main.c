@@ -154,8 +154,8 @@ int main(void)
 	*d3d_board_get(brd, 2, 1) = &empty;
 	*d3d_board_get(brd, 1, 2) = &empty;
 	*d3d_board_get(brd, 2, 2) = &empty;
-	d3d_camera_position(cam)->x = 1.4;
-	d3d_camera_position(cam)->y = 1.4;
+	d3d_vec_s pos = {1.4, 1.4};
+	double facing = 0;
 	init_pairs();
 	bool screen_refresh = true;
 	struct ticker tkr;
@@ -165,7 +165,7 @@ int main(void)
 		double move_angle;
 		tick(&tkr);
 		if (screen_refresh) {
-			d3d_draw(cam, brd, N_BATS, bats);
+			d3d_draw(cam, pos, facing, brd, N_BATS, bats);
 			// Draw the pixels on the terminal:
 			for (size_t y = 0; y < d3d_camera_height(cam); ++y) {
 				for (size_t x = 0;
@@ -214,7 +214,7 @@ int main(void)
 			screen_refresh = true;
 		}
 		// The straight-forward player movement angle:
-		move_angle = *d3d_camera_facing(cam);
+		move_angle = facing;
 		switch (getch()) {
 		case 'w': // Forward
 			break;
@@ -228,11 +228,11 @@ int main(void)
 			move_angle -= M_PI / 2;
 			break;
 		case 'q': // Turn left
-			*d3d_camera_facing(cam) += 0.04;
+			facing += 0.04;
 			screen_refresh = true;
 			continue;
 		case 'e': // Turn right
-			*d3d_camera_facing(cam) -= 0.04;
+			facing -= 0.04;
 			screen_refresh = true;
 			continue;
 		case 'x': // Quit the game
@@ -240,22 +240,21 @@ int main(void)
 		default: // Other keys are ignored
 			continue;
 		}
-		// The position of the camera:
-		d3d_vec_s *cam_pos = d3d_camera_position(cam);
+		// Move the position of the camera:
 		// Move in the move angle in the x direction:
-		cam_pos->x += cos(move_angle) * 0.04;
+		pos.x += cos(move_angle) * 0.04;
 		// Possibly hit the wall in the x direction:
-		if (cam_pos->x < WALL_START_X)
-			cam_pos->x = WALL_START_X;
-		else if (cam_pos->x > WALL_END_X)
-			cam_pos->x = WALL_END_X;
+		if (pos.x < WALL_START_X)
+			pos.x = WALL_START_X;
+		else if (pos.x > WALL_END_X)
+			pos.x = WALL_END_X;
 		// Move in the move angle in the y direction:
-		cam_pos->y += sin(move_angle) * 0.04;
+		pos.y += sin(move_angle) * 0.04;
 		// Possibly hit the wall in the y direction:
-		if (cam_pos->y < WALL_START_Y)
-			cam_pos->y = WALL_START_Y;
-		else if (cam_pos->y > WALL_END_Y)
-			cam_pos->y = WALL_END_Y;
+		if (pos.y < WALL_START_Y)
+			pos.y = WALL_START_Y;
+		else if (pos.y > WALL_END_Y)
+			pos.y = WALL_END_Y;
 		screen_refresh = true;
 	}
 }
