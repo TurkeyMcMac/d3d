@@ -234,13 +234,13 @@ static const d3d_block_s *hit_wall(
 		d3d_direction inverted;
 		const d3d_block_s * const *blk = NULL;
 		d3d_vec_s tonext = {0, 0};
-		d3d_direction ns = D3D_DNEGY, ew = D3D_DNEGX;
+		d3d_direction y_dir = D3D_DNEGY, x_dir = D3D_DNEGX;
 		if (dpos->x < 0.0) {
 			// The ray is going in the -x direction.
 			tonext.x = -mod1(pos->x);
 		} else if (dpos->x > 0.0) {
 			// The ray is going in the +x direction.
-			ew = D3D_DPOSX;
+			x_dir = D3D_DPOSX;
 			tonext.x = revmod1(pos->x);
 		}
 		if (dpos->y < 0.0) {
@@ -248,24 +248,24 @@ static const d3d_block_s *hit_wall(
 			tonext.y = -mod1(pos->y);
 		} else if (dpos->y > 0.0) {
 			// They ray is going in the +y direction.
-			ns = D3D_DPOSY;
+			y_dir = D3D_DPOSY;
 			tonext.y = revmod1(pos->y);
 		}
 		if (dpos->x == 0.0) {
-			goto hit_ns;
+			goto hit_y;
 		} else if (dpos->y == 0.0) {
-			goto hit_ew;
+			goto hit_x;
 		}
 		if (tonext.x / dpos->x < tonext.y / dpos->y) {
 			// The ray will hit a wall on the x-axis first
-	hit_ew:
-			*dir = ew;
+	hit_x:
+			*dir = x_dir;
 			pos->x += tonext.x;
 			pos->y += tonext.x / dpos->x * dpos->y;
 		} else {
 			// The ray will hit a wall on the y-axis first
-	hit_ns:
-			*dir = ns;
+	hit_y:
+			*dir = y_dir;
 			pos->y += tonext.y;
 			pos->x += tonext.y / dpos->y * dpos->x;
 		}
@@ -291,7 +291,7 @@ static const d3d_block_s *hit_wall(
 			} else {
 				// The face the ray hit is empty
 				// Nudge the ray past the wall:
-				if (*dir == ew) {
+				if (*dir == x_dir) {
 					pos->x += copysign(0.0001, dpos->x);
 				} else {
 					pos->y += copysign(0.0001, dpos->y);
