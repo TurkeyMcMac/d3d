@@ -81,10 +81,10 @@ typedef struct d3d_board_s d3d_board;
 
 /* A direction. The possible values are all listed below. */
 typedef enum {
-	D3D_DNORTH,
-	D3D_DSOUTH,
-	D3D_DWEST,
-	D3D_DEAST,
+	D3D_DPOSX, /* Positive x direction. */
+	D3D_DPOSY, /* etc. */
+	D3D_DNEGX,
+	D3D_DNEGY,
 	D3D_DUP,
 	D3D_DDOWN
 } d3d_direction;
@@ -153,12 +153,21 @@ const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 void d3d_free_board(d3d_board *board);
 
 /* Record what the camera sees, making it valid to access camera pixels. This
- * function is the entire point of this library. The camera is positioned
- * according to cam_pos and is facing in the direction cam_facing, measured in
- * radians. The given sprites are drawn inside the environment of the board. The
- * sprites pointer can be NULL if n_sprites is 0. Who knows what pixels will be
- * captured if the camera is not within the borders of the board. Sprites
- * outside the board will not be drawn. */
+ * function is the entire point of this library.
+ *
+ * The camera is positioned according to cam_pos and is facing in the direction
+ * cam_facing, measured in radians. In its orientation in relation to the axes,
+ * the facing angle is just like an angle around the unit circle, so increasing
+ * the angle turns the camera counter-clockwise. NOTE that the +y direction on
+ * the board is therefore "UP" just like the +y direction of the axes on which
+ * the unit circle is drawn, NOT "DOWN" like with other grids in this library.
+ *
+ * The given sprites are drawn inside the environment of the board. The sprites
+ * pointer can be NULL if n_sprites is 0.
+ *
+ * Out-of-bounds coordinates are tolerated. However, it is unspecified what
+ * pixels will be captured if the camera is not within the borders of the board.
+ * Sprites outside the board will not be drawn. */
 void d3d_draw(
 	d3d_camera *cam,
 	d3d_vec_s cam_pos,

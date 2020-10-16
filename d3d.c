@@ -101,27 +101,27 @@ static size_t tocoord(double c, bool positive)
 }
 
 // Move the given coordinates in the direction given. If the direction is not
-// cardinal, nothing happens. No bounds are checked.
+// horizontal, nothing happens. No bounds are checked.
 static void move_dir(d3d_direction dir, size_t *x, size_t *y)
 {
 	switch(dir) {
-	case D3D_DNORTH: --*y; break;
-	case D3D_DSOUTH: ++*y; break;
-	case D3D_DEAST: ++*x; break;
-	case D3D_DWEST: --*x; break;
+	case D3D_DPOSX: ++*x; break;
+	case D3D_DPOSY: ++*y; break;
+	case D3D_DNEGX: --*x; break;
+	case D3D_DNEGY: --*y; break;
 	default: break;
 	}
 }
 
-// Rotate a cardinal direction 180°. If the direction is not cardinal, it is
+// Rotate a horizontal direction 180°. If the direction is not horizontal, it is
 // returned unmodified.
 static d3d_direction invert_dir(d3d_direction dir)
 {
 	switch(dir) {
-	case D3D_DNORTH: return D3D_DSOUTH;
-	case D3D_DSOUTH: return D3D_DNORTH;
-	case D3D_DEAST: return D3D_DWEST;
-	case D3D_DWEST: return D3D_DEAST;
+	case D3D_DPOSX: return D3D_DNEGX;
+	case D3D_DPOSY: return D3D_DNEGY;
+	case D3D_DNEGX: return D3D_DPOSX;
+	case D3D_DNEGY: return D3D_DPOSY;
 	default: return dir;
 	}
 }
@@ -162,10 +162,10 @@ d3d_camera *d3d_new_camera(
 	empty_txtr->width = 1;
 	empty_txtr->height = 1;
 	empty_txtr->pixels[0] = empty_pixel;
-	cam->blank_block.faces[D3D_DNORTH] =
-	cam->blank_block.faces[D3D_DSOUTH] =
-	cam->blank_block.faces[D3D_DEAST] =
-	cam->blank_block.faces[D3D_DWEST] =
+	cam->blank_block.faces[D3D_DPOSX] =
+	cam->blank_block.faces[D3D_DPOSY] =
+	cam->blank_block.faces[D3D_DNEGX] =
+	cam->blank_block.faces[D3D_DNEGY] =
 	cam->blank_block.faces[D3D_DUP] =
 	cam->blank_block.faces[D3D_DDOWN] = empty_txtr;
 	cam->order = NULL;
@@ -234,21 +234,21 @@ static const d3d_block_s *hit_wall(
 		d3d_direction inverted;
 		const d3d_block_s * const *blk = NULL;
 		d3d_vec_s tonext = {0, 0};
-		d3d_direction ns = D3D_DNORTH, ew = D3D_DWEST;
+		d3d_direction ns = D3D_DNEGY, ew = D3D_DNEGX;
 		if (dpos->x < 0.0) {
-			// The ray is going west
+			// The ray is going in the -x direction.
 			tonext.x = -mod1(pos->x);
 		} else if (dpos->x > 0.0) {
-			// The ray is going east
-			ew = D3D_DEAST;
+			// The ray is going in the +x direction.
+			ew = D3D_DPOSX;
 			tonext.x = revmod1(pos->x);
 		}
 		if (dpos->y < 0.0) {
-			// The ray is going north
+			// The ray is going in the -y direction.
 			tonext.y = -mod1(pos->y);
 		} else if (dpos->y > 0.0) {
-			// They ray is going south
-			ns = D3D_DSOUTH;
+			// They ray is going in the +y direction.
+			ns = D3D_DPOSY;
 			tonext.y = revmod1(pos->y);
 		}
 		if (dpos->x == 0.0) {
@@ -257,13 +257,13 @@ static const d3d_block_s *hit_wall(
 			goto hit_ew;
 		}
 		if (tonext.x / dpos->x < tonext.y / dpos->y) {
-			// The ray will hit a east/west wall first
+			// The ray will hit a wall on the x-axis first
 	hit_ew:
 			*dir = ew;
 			pos->x += tonext.x;
 			pos->y += tonext.x / dpos->x * dpos->y;
 		} else {
-			// The ray will hit a north/south wall first
+			// The ray will hit a wall on the y-axis first
 	hit_ns:
 			*dir = ns;
 			pos->y += tonext.y;
@@ -329,18 +329,18 @@ static void draw_column(
 	// orientation, and put the distance in dimension:
 	double dimension;
 	switch (face) {
-	case D3D_DSOUTH:
+	case D3D_DPOSX:
+		dimension = revmod1(pos.y);
+		break;
+	case D3D_DPOSY:
 		dimension = mod1(pos.x);
 		break;
-	case D3D_DNORTH:
-		dimension = revmod1(pos.x);
-		break;
-	case D3D_DWEST:
+	case D3D_DNEGX:
 		dimension = mod1(pos.y);
 		break;
-	case D3D_DEAST:
+	case D3D_DNEGY:
 	default: // The default case shouldn't be reached.
-		dimension = revmod1(pos.y);
+		dimension = revmod1(pos.x);
 		break;
 	}
 	for (size_t t = 0; t < cam->height; ++t) {
