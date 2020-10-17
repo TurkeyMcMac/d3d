@@ -364,16 +364,17 @@ static void draw_column(
 			};
 			size_t bx = tocoord(newpos.x, dpos.x > 0.0),
 			       by = tocoord(newpos.y, dpos.y > 0.0);
-			const d3d_block_s *top_bot =
-				*GET(board, blocks, bx, by);
+			const d3d_block_s **top_bot =
+				GET(board, blocks, bx, by);
+			if (!top_bot) goto no_texture;
 			if (dist_y >= 1.0) {
 				// A ceiling was hit
-				txtr = top_bot->faces[D3D_DUP];
+				txtr = (*top_bot)->faces[D3D_DUP];
 				if (!txtr) goto no_texture;
 				tx = revmod1(newpos.x) * txtr->width;
 			} else {
 				// A floor was hit
-				txtr = top_bot->faces[D3D_DDOWN];
+				txtr = (*top_bot)->faces[D3D_DDOWN];
 				if (!txtr) goto no_texture;
 				tx = mod1(newpos.x) * txtr->width;
 			}
