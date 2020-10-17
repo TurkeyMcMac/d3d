@@ -174,7 +174,7 @@ d3d_camera *d3d_new_camera(
 	cam->last_n_sprites = 0;
 	empty_camera_pixels(cam);
 	for (size_t y = 0; y < height; ++y) {
-		double angle = fovy * ((double)y / height - 0.5);
+		double angle = fovy * (0.5 - (double)y / height);
 		cam->tans[y] = tan(angle);
 	}
 	return cam;
@@ -353,7 +353,7 @@ static void draw_column(
 			// A vertical wall was indeed hit
 			txtr = drawing;
 			tx = dimension * txtr->width;
-			ty = txtr->height * dist_y;
+			ty = txtr->height * (1.0 - dist_y);
 		} else {
 			// A floor or ceiling was hit instead. The horizontal
 			// displacement is adjusted accordingly:
