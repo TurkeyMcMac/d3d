@@ -319,7 +319,7 @@ static void draw_column(
 	block = hit_wall(board, &pos, &dpos, &face, &drawing);
 	if (!block) {
 		block = &cam->blank_block;
-		drawing = (d3d_texture *)block->faces[0];
+		drawing = block->faces[0];
 	}
 	disp.x = pos.x - cam_pos.x;
 	disp.y = pos.y - cam_pos.y;
