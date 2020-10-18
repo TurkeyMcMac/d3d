@@ -109,8 +109,9 @@ size_t d3d_camera_height(const d3d_camera *cam);
 /* Get a pixel in the camera's view. This returns NULL if the coordinates are
  * out of range. Otherwise, the pointer is valid until another function takes
  * the camera as a non-const parameter. If d3d_draw hasn't yet been called with
- * the camera, all the pixels are the camera's empty_pixel. */
-const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y);
+ * the camera, all the pixels are the camera's empty_pixel. This funcion does
+ * not modify the camera in any way. */
+d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y);
 
 /* Destroy a camera object. It shall never be used again. */
 void d3d_free_camera(d3d_camera *cam);
@@ -126,7 +127,7 @@ size_t d3d_texture_height(const d3d_texture *txtr);
 
 /* Get a pixel at a coordinate on a texture. NULL is returned if the coordinates
  * are out of range. The pointer is valid until the texture is used (indirectly)
- * in d3d_draw. */
+ * in d3d_draw. This function does not modify the texture in any way. */
 d3d_pixel *d3d_texture_get(d3d_texture *txtr, size_t x, size_t y);
 
 /* Permanently destroy a texture. */
@@ -146,7 +147,8 @@ size_t d3d_board_height(const d3d_board *board);
 /* Get a block in a board. If the coordinates are out of range, NULL is
  * returned. Otherwise, a pointer to a block POINTER is returned. This pointed-
  * to pointer can be modified with a new block pointer. The outer pointer is
- * valid until the board is used in d3d_draw. */
+ * valid until the board is used in d3d_draw. This function does not modify the
+ * board in any way. */
 const d3d_block_s **d3d_board_get(d3d_board *board, size_t x, size_t y);
 
 /* Permanently destroy a board. */

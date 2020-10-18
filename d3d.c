@@ -537,7 +537,7 @@ size_t d3d_camera_height(const d3d_camera *cam)
 	return cam->height;
 }
 
-const d3d_pixel *d3d_camera_get(const d3d_camera *cam, size_t x, size_t y)
+d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y)
 {
 	return GET(cam, pixels, x, y);
 }
