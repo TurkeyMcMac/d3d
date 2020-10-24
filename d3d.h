@@ -118,7 +118,8 @@ d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y);
 void d3d_free_camera(d3d_camera *cam);
 
 /* Allocate a new texture with its pixels initialized to the fill pixel.  NULL
- * is returned if allocation fails.*/
+ * is returned if allocation fails. The width and height will be made 1 if they
+ * are 0, as a dimension of 0 cannot be stretched across another dimension. */
 d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill);
 
 /* Get the width of the texture in pixels. */

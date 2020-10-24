@@ -76,8 +76,7 @@ static void empty_camera_pixels(d3d_camera *cam)
 static size_t texture_size(size_t width, size_t height)
 {
 	size_t pixels_size = width * height * sizeof(d3d_pixel);
-	if (width != 0 && pixels_size / sizeof(d3d_pixel) / width != height)
-		return 0;
+	if (pixels_size / sizeof(d3d_pixel) / width != height) return 0;
 	size_t base = offsetof(d3d_texture, pixels);
 	size_t size = base + pixels_size;
 	if (base > size) return 0;
@@ -216,6 +215,8 @@ void d3d_free_camera(d3d_camera *cam)
 
 d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill)
 {
+	if (width < 1) width = 1;
+	if (height < 1) height = 1;
 	size_t size = texture_size(width, height);
 	if (size == 0) return NULL;
 	d3d_texture *txtr = d3d_malloc(size);
@@ -434,9 +435,7 @@ static void draw_sprite_dist(
 	const d3d_sprite_s *sp,
 	double dist)
 {
-	if (sp->scale.x <= 0.0 || sp->scale.y <= 0.0
-	 || sp->txtr->width == 0 || sp->txtr->height == 0)
-		return;
+	if (sp->scale.x <= 0.0 || sp->scale.y <= 0.0) return;
 	d3d_vec_s disp = { sp->pos.x - cam_pos.x, sp->pos.y - cam_pos.y };
 	double angle, width, height, diff, maxdiff;
 	long start_x, start_y;
