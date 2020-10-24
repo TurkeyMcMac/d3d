@@ -9,13 +9,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Adds the amount to the size variable, returning NULL from the current
+// function on overflow.
+#define CHECKED_ADD(size, amount) do { \
+	size_t new_size = (size) + (amount); \
+	if (new_size < (size)) return NULL; \
+	(size) = new_size; \
+} while (0)
+
 // Gets the memory alignment of the given type.
 #define ALIGNOF(type) offsetof(struct { char c; type t; }, t)
 
 // Increments size until a value of type could be stored at the offset size from
-// an aligned pointer.
-#define ALIGN_SIZE(size, type) \
-	((size) = ((size) + ALIGNOF(type) - 1) / ALIGNOF(type) * ALIGNOF(type))
+// an aligned pointer. Returns NULL from the current function on overflow.
+#define ALIGN_SIZE(size, type) do { \
+	size_t new_size = \
+		((size) + ALIGNOF(type) - 1) / ALIGNOF(type) * ALIGNOF(type); \
+	if (new_size < (size)) return NULL; \
+	(size) = new_size; \
+} while (0)
+
 
 // get a pointer to a coordinate in a grid. A grid is any structure with members
 // 'width' and 'height' and another member 'member' which is a buffer containing
@@ -62,8 +75,13 @@ static void empty_camera_pixels(d3d_camera *cam)
 
 static size_t texture_size(size_t width, size_t height)
 {
-	return offsetof(d3d_texture, pixels)
-		+ width * height * sizeof(d3d_pixel);
+	size_t pixels_size = width * height * sizeof(d3d_pixel);
+	if (width != 0 && pixels_size / sizeof(d3d_pixel) / width != height)
+		return 0;
+	size_t base = offsetof(d3d_texture, pixels);
+	size_t size = base + pixels_size;
+	if (base > size) return 0;
+	return size;
 }
 
 // Computes fmod(n, 1.0) if n >= 0, or 1.0 + fmod(n, 1.0) if n < 0
@@ -134,19 +152,24 @@ d3d_camera *d3d_new_camera(
 	d3d_pixel empty_pixel)
 {
 	size_t size;
-	size_t txtr_offset, tans_offset, dists_offset;
+	size_t pixels_size, txtr_offset, tans_offset, dists_offset;
 	d3d_texture *empty_txtr;
 	d3d_camera *cam;
-	size = offsetof(d3d_camera, pixels)
-		+ width * height * sizeof(d3d_pixel);
+	size = offsetof(d3d_camera, pixels);
+	pixels_size = width * height * sizeof(d3d_pixel);
+	if (width != 0 && pixels_size / sizeof(d3d_pixel) / width != height)
+		return NULL;
+	CHECKED_ADD(size, pixels_size);
 	ALIGN_SIZE(size, d3d_texture);
 	txtr_offset = size;
-	size += texture_size(1, 1);
+	CHECKED_ADD(size, texture_size(1, 1));
 	ALIGN_SIZE(size, double);
 	tans_offset = size;
-	size += height * sizeof(double);
+	if (height * sizeof(double) / sizeof(double) != height) return NULL;
+	CHECKED_ADD(size, height * sizeof(double));
 	dists_offset = size;
-	size += width * sizeof(double);
+	if (width * sizeof(double) / sizeof(double) != width) return NULL;
+	CHECKED_ADD(size, width * sizeof(double));
 	cam = d3d_malloc(size);
 	if (!cam) return NULL;
 	// The members 'tans' and 'dists' are actually pointers to parts of the
@@ -155,8 +178,11 @@ d3d_camera *d3d_new_camera(
 	empty_txtr = (void *)((char *)cam + txtr_offset);
 	cam->tans = (void *)((char *)cam + tans_offset);
 	cam->dists = (void *)((char *)cam + dists_offset);
-	cam->fov.x = fovx;
-	cam->fov.y = fovy;
+	// Just do basic protection against non-positive FOVs as they might
+	// cause issues. I could do something better than silently clamping, but
+	// what do you expect a non-positive FOV to do anyway?
+	cam->fov.x = fovx > 0.0 ? fovx : 0.001;
+	cam->fov.y = fovy > 0.0 ? fovy : 0.001;
 	cam->width = width;
 	cam->height = height;
 	empty_txtr->width = 1;
@@ -174,7 +200,7 @@ d3d_camera *d3d_new_camera(
 	cam->last_n_sprites = 0;
 	empty_camera_pixels(cam);
 	for (size_t y = 0; y < height; ++y) {
-		double angle = fovy * (0.5 - (double)y / height);
+		double angle = cam->fov.y * (0.5 - (double)y / height);
 		cam->tans[y] = tan(angle);
 	}
 	return cam;
@@ -191,6 +217,7 @@ void d3d_free_camera(d3d_camera *cam)
 d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill)
 {
 	size_t size = texture_size(width, height);
+	if (size == 0) return NULL;
 	d3d_texture *txtr = d3d_malloc(size);
 	if (!txtr) return NULL;
 	txtr->width = width;
@@ -203,9 +230,12 @@ d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill)
 
 d3d_board *d3d_new_board(size_t width, size_t height, const d3d_block_s *fill)
 {
+	size_t size = offsetof(d3d_board, blocks);
 	size_t blocks_size = width * height * sizeof(d3d_block_s *);
-	d3d_board *board =
-		d3d_malloc(offsetof(d3d_board, blocks) + blocks_size);
+	if (width != 0 && blocks_size / sizeof(d3d_block_s *) / width != height)
+		return NULL;
+	CHECKED_ADD(size, blocks_size);
+	d3d_board *board = d3d_malloc(size);
 	if (!board) return NULL;
 	board->width = width;
 	board->height = height;
@@ -471,9 +501,10 @@ static void draw_sprites(
 	       }
 	} else {
 		if (n_sprites > cam->order_buf_cap) {
-			struct d3d_sprite_order *new_order = d3d_realloc(
-				cam->order, n_sprites * sizeof(*cam->order));
-			if (new_order) {
+			struct d3d_sprite_order *new_order;
+			size_t size = n_sprites * sizeof(*cam->order);
+			if (size / sizeof(*cam->order) == n_sprites
+			 && (new_order = d3d_realloc(cam->order, size))) {
 				cam->order = new_order;
 				cam->order_buf_cap = n_sprites;
 			} else {

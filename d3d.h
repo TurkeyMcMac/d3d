@@ -30,7 +30,8 @@
  * corresponding functions in the standard library. They are meant for internal
  * use by the library. If the preprocessor symbol D3D_CUSTOM_ALLOCATOR is
  * defined, provide implementations in another compilation unit. Otherwise, the
- * library implements these with the standard library functions. */
+ * library implements these with the standard library functions. Allocations
+ * might fail without ever calling these functions. */
 void *d3d_malloc(size_t);
 void *d3d_realloc(void *, size_t);
 void d3d_free(void *);
@@ -92,7 +93,7 @@ typedef enum {
 /* Allocate a new camera with given field of view in the x and y directions (in
  * radians) and a given view width and height in pixels. The empty pixel is the
  * pixel value set in the camera when a cast ray hits nothing (it gets off the
- * edge of the board.) */
+ * edge of the board.) NULL is returned if allocation fails. */
 d3d_camera *d3d_new_camera(
 	double fovx,
 	double fovy,
@@ -116,7 +117,8 @@ d3d_pixel *d3d_camera_get(d3d_camera *cam, size_t x, size_t y);
 /* Destroy a camera object. It shall never be used again. */
 void d3d_free_camera(d3d_camera *cam);
 
-/* Allocate a new texture with its pixels initialized to the fill pixel. */
+/* Allocate a new texture with its pixels initialized to the fill pixel.  NULL
+ * is returned if allocation fails.*/
 d3d_texture *d3d_new_texture(size_t width, size_t height, d3d_pixel fill);
 
 /* Get the width of the texture in pixels. */
@@ -135,7 +137,7 @@ void d3d_free_texture(d3d_texture *txtr);
 
 /* Create a new board with a width and height. All its blocks are initially
  * set to the block fill. If fill is NULL, all the blocks are set to an
- * empty/transparent block. */
+ * empty/transparent block. NULL is returned if allocation fails. */
 d3d_board *d3d_new_board(size_t width, size_t height, const d3d_block_s *fill);
 
 /* Get the width of the board in blocks. */
