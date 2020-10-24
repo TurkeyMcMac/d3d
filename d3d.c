@@ -434,6 +434,9 @@ static void draw_sprite_dist(
 	const d3d_sprite_s *sp,
 	double dist)
 {
+	if (sp->scale.x <= 0.0 || sp->scale.y <= 0.0
+	 || sp->txtr->width == 0 || sp->txtr->height == 0)
+		return;
 	d3d_vec_s disp = { sp->pos.x - cam_pos.x, sp->pos.y - cam_pos.y };
 	double angle, width, height, diff, maxdiff;
 	long start_x, start_y;
