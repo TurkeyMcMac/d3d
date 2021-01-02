@@ -2,7 +2,7 @@
 #include "ticker.h"
 #include "../d3d.h"
 #include <curses.h>
-#include <math.h>
+#include <tgmath.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -155,14 +155,14 @@ int main(void)
 	*d3d_board_get(brd, 1, 2) = &empty;
 	*d3d_board_get(brd, 2, 2) = &empty;
 	d3d_vec_s pos = {1.4, 1.4};
-	double facing = 0;
+	d3d_scalar facing = 0;
 	init_pairs();
 	bool screen_refresh = true;
 	struct ticker tkr;
 	ticker_init(&tkr, 10);
 	// The bat state cycles to 0 before it hits 20:
 	for (int bat_state = 1 ;; bat_state = (bat_state + 1) % 20) {
-		double move_angle;
+		d3d_scalar move_angle;
 		tick(&tkr);
 		if (screen_refresh) {
 			d3d_draw(cam, pos, facing, brd, N_BATS, bats);
