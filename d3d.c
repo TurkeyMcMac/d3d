@@ -159,7 +159,9 @@ d3d_camera *d3d_new_camera(
 	if (width != 0 && pixels_size / sizeof(d3d_pixel) / width != height)
 		return NULL;
 	CHECKED_ADD(size, pixels_size);
-	ALIGN_SIZE(size, d3d_texture);
+	// This type probably has the alignment of a one-pixel texture:
+	typedef struct { size_t width, height; d3d_pixel pixels[1]; } one_pix;
+	ALIGN_SIZE(size, one_pix);
 	txtr_offset = size;
 	CHECKED_ADD(size, texture_size(1, 1));
 	ALIGN_SIZE(size, d3d_scalar);
