@@ -1,14 +1,7 @@
 This demonstration shows a use of the library. Walls and empty spaces are shown,
-along with sprites. Methods of sprite movement and animation used as well. The
-code is located in 'main.c'.
+along with sprites. Methods of sprite movement and animation are used as well.
+The actual rendering is done by Curses. The code is located in 'demo.c'. You can
+see the controls at the top of that file.
 
-To compile the demo, run `make`.
-
-While the demo is intended to work on Windows, it probably doesn't, since I have
-no Windows machine on which to test.
-
-This demo has a special way of translating ASCII characters to curses colors.
-The table is shown in 'color-table'. This file is valid TSV. The CHAR column is
-the ASCII character. The FORE column is the foreground color. The BACK column is
-the background color. The foreground color is displayed as the color of a the
-character '#' on the background.
+To run the demo, execute `make` then `./demo`. (You will need to find another
+way to compile on Windows/non-Unix.)

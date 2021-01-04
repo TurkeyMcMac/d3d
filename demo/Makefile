@@ -1,9 +1,10 @@
-exe = d3d-demo
+exe = demo
 
-flags = -std=c99 -Wall -Wextra -Wpedantic -O3 $(CFLAGS)
+flags = -std=c99 -Wall -Wextra -Wpedantic $(CFLAGS)
 
-$(exe): *.c *.h ../d3d.c ../d3d.h
-	$(CC) $(flags) -o $@ *.c ../d3d.c -lm -lcurses
+$(exe): demo.c ../d3d.c ../d3d.h
+	$(CC) $(flags) -o $@ demo.c ../d3d.c -lm -lcurses
 
+.PHONY: clean
 clean:
 	$(RM) $(exe)
