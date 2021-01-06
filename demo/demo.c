@@ -232,6 +232,12 @@ int main(void)
 			turn_amount = +CAM_TURN_SPEED;
 			break;
 		case QUIT_KEY:
+			// PROGRAM ENDS HERE.
+			d3d_free_camera(cam);
+			d3d_free_board(board);
+			d3d_free_texture(bat_txtr_1);
+			d3d_free_texture(bat_txtr_0);
+			d3d_free_texture(wall_txtr);
 			endwin();
 			return EXIT_SUCCESS;
 		}
