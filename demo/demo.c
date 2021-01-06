@@ -193,6 +193,7 @@ int main(void)
 				mvaddch(y, x, *d3d_camera_get(cam, x, y));
 			}
 		}
+		refresh();
 
 		// Put a delay between frames:
 		napms(FRAME_DELAY);
