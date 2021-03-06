@@ -103,6 +103,8 @@ int main(void)
 {
 	// Initialize the screen:
 	initscr();
+	// Read one character at a time:
+	cbreak();
 	// Don't wait for user input:
 	timeout(0);
 	// Don't show input characters:
